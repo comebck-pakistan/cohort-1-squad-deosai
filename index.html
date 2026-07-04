@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Squad Deosai — The Social-Commerce Support Agent | Research Findings</title>
+  <meta name="description" content="User research findings for Squad Deosai's AI DM assistant for Pakistani social sellers. 15 sellers engaged, 12 surveyed, 4 in-depth interviews." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <div class="nav__inner">
+      <a href="#hero" class="nav__brand">
+        <span class="nav__logo">SD</span>
+        <span class="nav__name">Squad Deosai</span>
+      </a>
+      <nav class="nav__links" aria-label="Section navigation">
+        <a href="#problem">Problem</a>
+        <a href="#methodology">Method</a>
+        <a href="#survey">Survey</a>
+        <a href="#interviews">Interviews</a>
+        <a href="#demo">Demo</a>
+        <a href="#findings">Findings</a>
+        <a href="#waitlist">Waitlist</a>
+      </nav>
+      <a href="#demo" class="nav__cta">Try the demo</a>
+      <button class="nav__toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero__glow" aria-hidden="true"></div>
+      <div class="container hero__inner reveal">
+        <p class="hero__eyebrow">Squad Deosai · Comebck Pakistan — Cohort 1 Product Challenge</p>
+        <h1 class="hero__title">The Social-Commerce<br /><span class="accent">Support Agent</span></h1>
+        <p class="hero__pitch">
+          An Instagram &amp; WhatsApp DM assistant that answers the five questions customers
+          actually ask — <strong>price, delivery, availability, returns, hours</strong> — from a
+          seller's own catalogue, and auto-confirms COD orders.
+        </p>
+        <p class="hero__target">
+          <span class="hero__target-label">Built for</span>
+          Pakistani social sellers in fashion &amp; jewellery, running every DM alone, with no team and no automation.
+        </p>
+
+        <div class="stat-chips">
+          <div class="chip">
+            <span class="chip__num" data-count="83" data-suffix="%">0</span>
+            <span class="chip__label">have lost a sale to a slow reply</span>
+          </div>
+          <div class="chip">
+            <span class="chip__num" data-count="15">0</span>
+            <span class="chip__label">unique sellers engaged</span>
+          </div>
+          <div class="chip">
+            <span class="chip__num" data-count="12">0</span>
+            <span class="chip__label">surveyed &middot; 4 interviewed</span>
+          </div>
+          <div class="chip">
+            <span class="chip__num" data-count="6">0</span>
+            <span class="chip__label">confirmed early testers</span>
+          </div>
+        </div>
+
+        <div class="hero__actions">
+          <a href="#demo" class="btn btn--primary">See the live demo &darr;</a>
+          <a href="#survey" class="btn btn--ghost">Jump to the data</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROBLEM ============ -->
+    <section class="section" id="problem">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">01 — The Problem</span>
+          <h2>A seller's day is death by a thousand DMs</h2>
+          <p class="section__lead">
+            Repetitive questions eat 30 minutes to 2 hours a day, messages go unanswered after
+            hours, and COD orders get ghosted on delivery day. The same five questions, over and over.
+          </p>
+        </div>
+
+        <div class="timeline reveal">
+          <div class="timeline__item">
+            <span class="timeline__time">9:00</span>
+            <div class="timeline__card"><span class="timeline__q">"What's the price?"</span><span class="timeline__note">Mid-packing an order</span></div>
+          </div>
+          <div class="timeline__item">
+            <span class="timeline__time">12:30</span>
+            <div class="timeline__card"><span class="timeline__q">"Do you deliver to Multan?"</span><span class="timeline__note">During lunch</span></div>
+          </div>
+          <div class="timeline__item">
+            <span class="timeline__time">16:15</span>
+            <div class="timeline__card"><span class="timeline__q">"Is this still available?"</span><span class="timeline__note">Same question, 4th time</span></div>
+          </div>
+          <div class="timeline__item timeline__item--miss">
+            <span class="timeline__time">23:40</span>
+            <div class="timeline__card"><span class="timeline__q">"Anyone there? 👋"</span><span class="timeline__note">Missed — buyer assumes page is dead</span></div>
+          </div>
+        </div>
+
+        <div class="beforeafter reveal">
+          <div class="ba ba--before">
+            <span class="ba__tag">Today</span>
+            <ul>
+              <li>Every DM answered by hand, one at a time</li>
+              <li>After-hours messages sit unread until morning</li>
+              <li>Slow replies quietly cost sales</li>
+            </ul>
+          </div>
+          <div class="ba__arrow" aria-hidden="true">&rarr;</div>
+          <div class="ba ba--after">
+            <span class="ba__tag ba__tag--accent">With the agent</span>
+            <ul>
+              <li>The five common questions answered instantly, 24/7</li>
+              <li>Catalogue &amp; policy replies pulled automatically</li>
+              <li>COD confirmation auto-sent when an order lands</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ METHODOLOGY ============ -->
+    <section class="section section--tint" id="methodology">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">02 — Research Methodology</span>
+          <h2>Two tracks, run in parallel</h2>
+          <p class="section__lead">Everything on this page traces back to primary research with real sellers — no borrowed stats.</p>
+        </div>
+
+        <div class="method-grid reveal">
+          <div class="method-card">
+            <span class="method-card__num">12</span>
+            <h3>Structured survey</h3>
+            <p>A Google Form on customer-support challenges for Instagram/WhatsApp businesses — covering channel, inquiry volume, questions asked, time spent, lost sales, tools, usefulness, willingness to pay, and testing interest.</p>
+            <span class="method-card__meta">12 responses · Jun 27–29, 2026</span>
+          </div>
+          <div class="method-card">
+            <span class="method-card__num">4</span>
+            <h3>In-depth interviews</h3>
+            <p>A structured guide covering the same themes in more depth with StickerMania, AP Crafts, Jewellery with Maheen, and ZayZaiwar.</p>
+            <span class="method-card__meta">4 sellers · full comparable answers</span>
+          </div>
+        </div>
+
+        <p class="method-note reveal">
+          <strong>An honest note on the count:</strong> AP Crafts appears in both tracks — she
+          completed the form directly, then elaborated by chat. So the two tracks together
+          represent <strong>15 unique sellers, not 16</strong>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ SURVEY RESULTS ============ -->
+    <section class="section" id="survey">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">03 — Survey Results (n = 12)</span>
+          <h2>What 12 sellers told us</h2>
+          <p class="section__lead">Every chart below is rendered directly from the research dataset. Each pairs with the one takeaway that matters.</p>
+        </div>
+
+        <div class="chart-grid">
+          <figure class="chart-card reveal">
+            <figcaption><h3>Daily inquiry volume</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartVolume"></canvas></div>
+            <p class="takeaway">Most sellers are low-volume — 7 of 12 get under 10 inquiries a day. The pain is interruption, not raw hours.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Time spent replying daily</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartTime"></canvas></div>
+            <p class="takeaway">Most spend under an hour, but the two highest-volume sellers spend 1–4 hrs/day — headcount pain starts at scale.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Lost a sale to a slow reply?</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartLost"></canvas></div>
+            <p class="takeaway">10 of 12 (83%) have lost a sale at least occasionally — only 2 say "Never".</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Perceived usefulness of the tool</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartUseful"></canvas></div>
+            <p class="takeaway">8 of 12 (67%) rate a catalogue-aware assistant Very or Extremely Useful; only 1 says Not Useful.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>First thing they'd automate</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartPriority"></canvas></div>
+            <p class="takeaway">Product Questions win by a landslide — 8 of 12 (67%) pick them first, far ahead of everything else.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Willing to pay if reply time cut 50%+</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartPay"></canvas></div>
+            <p class="takeaway">10 of 12 (83%) would at least consider paying; only 2 are Unlikely / No.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Price point per month</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartPrice"></canvas></div>
+            <p class="takeaway">Rs. 500–1,000/month is the modal anchor (7 of 12, 58%), with room for a higher tier.</p>
+          </figure>
+
+          <figure class="chart-card reveal">
+            <figcaption><h3>Interest in 7–14 day early testing</h3></figcaption>
+            <div class="chart-holder"><canvas id="chartTesting"></canvas></div>
+            <p class="takeaway">4 firm "Yes", 8 "Maybe" — every single respondent is at least open to testing. None said no.</p>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ INTERVIEWS ============ -->
+    <section class="section section--tint" id="interviews">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">04 — Interview Highlights</span>
+          <h2>Four sellers, in their own words</h2>
+          <p class="section__lead">Including the counter-signal — because mentors should see the pushback, not just the wins.</p>
+        </div>
+        <div class="interview-grid" id="interviewGrid"><!-- injected by script.js --></div>
+      </div>
+    </section>
+
+    <!-- ============ DEMO ============ -->
+    <section class="section" id="demo">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">05 — Interactive Demo ⭐</span>
+          <h2>Try the assistant yourself</h2>
+          <p class="section__lead">
+            A client-side mockup of the DM assistant answering from a sample catalogue.
+            Tap a quick reply or type your own — then place an order to see the COD auto-confirmation.
+          </p>
+        </div>
+
+        <div class="demo-wrap reveal">
+          <div class="phone">
+            <div class="phone__bar">
+              <div class="phone__avatar">SD</div>
+              <div class="phone__meta">
+                <span class="phone__title">Deosai Threads</span>
+                <span class="phone__status"><span class="dot"></span> Auto-replies on</span>
+              </div>
+              <span class="phone__ig">DM</span>
+            </div>
+            <div class="phone__thread" id="thread" aria-live="polite"></div>
+            <div class="phone__quick" id="quickReplies"></div>
+            <form class="phone__input" id="chatForm" autocomplete="off">
+              <input type="text" id="chatInput" placeholder="Ask about price, delivery, stock…" aria-label="Type a message" />
+              <button type="submit" aria-label="Send">&uarr;</button>
+            </form>
+          </div>
+
+          <aside class="demo-side">
+            <span class="demo-badge">Product concept demo · not live data</span>
+            <h3>Sample catalogue loaded</h3>
+            <ul class="catalogue" id="catalogueList"></ul>
+            <div class="demo-policies" id="demoPolicies"></div>
+            <p class="demo-hint">Keyword matching runs entirely in your browser — no server, no LLM call. It mirrors how the real agent would read a seller's own catalogue.</p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ CROSS-CUTTING FINDINGS ============ -->
+    <section class="section section--tint" id="findings">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">06 — Cross-Cutting Findings</span>
+          <h2>Faster replies, fewer lost sales</h2>
+          <p class="section__lead">The clearest signal across both tracks: reply speed tracks directly against lost sales.</p>
+        </div>
+
+        <div class="speed-grid reveal">
+          <div class="speed-card speed-card--good">
+            <span class="speed-card__name">Jewellery with Maheen</span>
+            <span class="speed-card__time">~1 hr reply</span>
+            <span class="speed-card__result">0 lost sales · 50+ parcels</span>
+          </div>
+          <div class="speed-card speed-card--good">
+            <span class="speed-card__name">ZayZaiwar (Shamoon)</span>
+            <span class="speed-card__time">30 min – 1 hr reply</span>
+            <span class="speed-card__result">No lost-sale incident</span>
+          </div>
+          <div class="speed-card speed-card--bad">
+            <span class="speed-card__name">StickerMania</span>
+            <span class="speed-card__time">1–2 days reply</span>
+            <span class="speed-card__result">Lost 2 sales to a missed DM</span>
+          </div>
+        </div>
+
+        <ul class="takeaway-list reveal">
+          <li><strong>Availability &amp; price dominate</strong> even when a catalogue already exists — 8 of 12 name Product Questions first, echoed by StickerMania, Maheen &amp; ZayZaiwar.</li>
+          <li><strong>After-hours gaps cost real sales</strong> — StickerMania's 2 lost customers came from a single missed notification.</li>
+          <li><strong>Segment by product type:</strong> catalogue-driven sellers fit the full assistant; custom/bespoke sellers (AP Crafts) fit a lighter closed-hours/policy responder.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ============ WAITLIST & BENCHMARKS ============ -->
+    <section class="section" id="waitlist">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="kicker">07 — Waitlist &amp; Benchmarks</span>
+          <h2>The numbers a mentor wants</h2>
+        </div>
+
+        <div class="bench-strip reveal" id="benchStrip"></div>
+
+        <div class="table-wrap reveal">
+          <h3 class="table-title">Early-access waitlist</h3>
+          <table class="waitlist-table">
+            <thead>
+              <tr><th>Contact</th><th>Business</th><th>Status</th></tr>
+            </thead>
+            <tbody id="waitlistBody"></tbody>
+          </table>
+          <p class="table-foot">Plus the remaining survey respondents: 4 firm "Yes" and 7 "Maybe" on 7–14 day testing — contact details live in the raw response sheet.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div>
+        <span class="footer__brand">Squad Deosai</span>
+        <p class="footer__note">Comebck Pakistan — Cohort 1 Product Challenge · User Research Findings</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
