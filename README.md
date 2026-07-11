@@ -8,7 +8,7 @@
 
 ---
 
-## 👥 Core Team & Division of Work
+## 👥 Core Team & Division of Work (3rd Week Output)
 
 Our squad divided ownership across product development, design systems, requirements research, and technology auditing to deliver a bulletproof MVP:
 
@@ -22,16 +22,6 @@ Our squad divided ownership across product development, design systems, requirem
 
 ### 🧠 Daniyal Rashid
 * **AI Orchestration Research**: Investigated open-source agent (e.g. Gemma, Qwen etc) and API blueprints to connect parsed catalog data to Meta Cloud APIs and WhatsApp Business accounts.
-
----
-
-## 🚀 Key Features
-
-* **Interactive Setup Wizard**: Dynamic prompts, preset builder guidelines, negative constraints, and tone of voice configurations (including Pivotal Hinglish / Roman Urdu support).
-* **Grid Spreadsheet Editor**: Directly edit, search, and update uploaded Excel (.xlsx, .xls) and CSV (.csv) catalogs inside the browser.
-* **Live Playground Simulator**: Instant sandbox chat simulation where sellers can text the bot to verify prompt behaviors, brand memory constraints, and catalog matching.
-* **Order Tracking Center**: Dedicated dashboard monitoring pending, confirmed, and cancelled Cash-on-Delivery checkouts.
-* **Secure Admin Control Panel**: Dedicated directory panel `/admin` for the Deosai team to monitor sellers, verify catalog listings, and connect Meta WhatsApp Cloud configurations.
 
 ---
 
