@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Deosai design tokens — "Presence"
+   Warm paper + deep teal + marigold, with a jade "live" green
+   reserved for connected / auto-replied states.
+   ============================================================ */
+@theme {
+  --color-ink: #211d18;
+  --color-ink-soft: #57514a;
+  --color-ink-faint: #8c857b;
+
+  --color-paper: #f4eee2;
+  --color-paper-deep: #ece3d2;
+  --color-card: #fbf7ee;
+
+  --color-teal: #0f4c46;
+  --color-teal-bright: #12695e;
+  --color-teal-soft: #dcebe6;
+
+  --color-marigold: #e39a2e;
+  --color-marigold-soft: #f6e6c8;
+
+  --color-live: #3e9e7e;
+  --color-live-soft: #d9efe5;
+
+  --color-line: #e4dbc9;
+  --color-danger: #b4472f;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-sans: var(--font-manrope), system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+
+  --radius-card: 1.25rem;
+}
+
+/* Base */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible keyboard focus everywhere */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-teal-bright);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--color-marigold-soft);
+  color: var(--color-ink);
+}
+
+/* ============================================================
+   Signature motion: the presence pulse + typing dots
+   ============================================================ */
+@keyframes deosai-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 0.55rem color-mix(in srgb, var(--color-live) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 0%, transparent);
+  }
+}
+
+.pulse-dot {
+  animation: deosai-pulse 2.4s ease-out infinite;
+}
+
+@keyframes deosai-typing {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  30% {
+    transform: translateY(-3px);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  animation: deosai-typing 1.3s ease-in-out infinite;
+}
+
+@keyframes deosai-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.bubble-in {
+  animation: deosai-rise 0.4s ease both;
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
