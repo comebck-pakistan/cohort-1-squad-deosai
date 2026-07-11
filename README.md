@@ -1,98 +1,64 @@
-# 🐯 Squad Deosai
+# 🤖 Deosai — AI Auto-DM & COD Confirmation Platform
 
 > **Comebck Pakistan — Cohort 1 · Product Challenge**
-> 
-> Our Research Findings Landing Page (https://cohort-1-squad-deosai.vercel.app/)
+>
+> Deosai is a tailored AI-powered social commerce assistant built for social sellers in Pakistan (focusing on Jewellery and Fashion brands). It enables sellers to automate repeating customer queries (price, shipping, return policies) from uploaded spreadsheets and URLs, and handles automatic Cash-on-Delivery (COD) checkout verification.
+>
+> 🌐 **Landing Page:** [cohort-1-squad-deosai.vercel.app](https://cohort-1-squad-deosai.vercel.app/)
 
 ---
 
-## 👥 Squad Members
+## 👥 Core Team & Division of Work
 
-- Ermish Tabassum
-- Danial Sohail
-- Zain Ali Khan
-- Daniyal Rashid
+Our squad divided ownership across product development, design systems, requirements research, and technology auditing to deliver a bulletproof MVP:
 
-**GitHub usernames:**
+### 💻 Danial Sohail & Ermish Tabassum
+* **Authentication & Database Sync**: Implemented secure session management, automatic profile synchronization, client-side role guards for secured views, and bulletproof `localStorage` database fallbacks.
+* **Spreadsheet & Catalog Parser**: Integrated client-side parsing using `PapaParse` and `SheetJS (xlsx)` to ingest product catalogs instantly. Created a full spreadsheet-like table editor where sellers can edit, delete, add rows, and filter cells.
+* **Branded Interface & Workflows**: Designed the core frontend dashboard matching the warm paper, deep teal, and marigold aesthetics. Implemented the setup builder tabs, order logs, live chat testing playground, and secure admin control dashboards.
 
-- [@danialkhawaja02](https://github.com/danialkhawaja02)
-- [@daniiyal-creates](https://github.com/daniiyal-creates)
-- [@ermish-codes](https://github.com/ermish-codes)
-- [@zainalikhan-revolution](https://github.com/zainalikhan-revolution)
+### 🔍 Zain Ali Khan
+* **R&D & Market Validation**: Led customer interviews, processed seller surveys, and engineered platform requirements. Validated the jewellery and fashion segments to refine target workflows.
 
----
-
-## 💡 Our Idea
-
-Our squad picked **[Idea 8 — The Social-Commerce Support Agent](https://github.com/Comebck-Pakistan/cohort-1-product-challenge#idea-8--the-social-commerce-support-agent)** from the [Cohort 1 Product Challenge](https://github.com/Comebck-Pakistan/cohort-1-product-challenge). Below are our ideation-stage validation answers, reproduced exactly as we submitted them.
-
-### One specific user
-
-A Pakistani social seller running a fashion or jewellery shop on Instagram or Whatsapp, managing every customer dm alone, with no or little team and no automation, who loses sales during during off hours and wastes time manually confirming Cash on Delivery orders that may never show up.
-
-### The painful problem
-
-When a Pakistani social seller runs an ad or posts a reel, dm flood in, the same questions over and over, price, delivery charges, availability, return policy. They answer every single one manually, which eats 30 minutes to 2 hours a day and when they go offline at night or on weekends, those messages go unanswered and customers move on. On top of that, they waste time chasing COD orders, confirming addresses, reconfirming intent, only to get ghosted on delivery day. There is no tool that knows their catalogue and policies well enough to handle any of this for them, so every hour offline and every COD that fails is money they can't get back.
-
-### Our 8-week wedge
-
-An Instagram/Whatsapp dm AI tool for Pakistani social sellers that answers the five most common customer questions, price, delivery, availability, return policy and business hours using the seller's own catalogue and policies and sends a COD confirmation message automatically when an order is placed.
-
-### The one number that proves people want it
-
-11+ sellers confirmed the pain through our survey and interviews, 6 are willing to test our early version and a brand processing 400 to 500 orders daily is still handling everything manually with zero after hours support, proving the problem exists even at scale.
-
-### Why we picked this idea
-
-We started with two other ideas, an Urdu study coach and a Freelancer Co-pilot but both had some limitations so we picked this because we can physically reach our users today, we already have 11 survey responses from active sellers, three in-depth interviews completed including a brand processing 400–500 orders daily. The problem is visible, daily and Pakistani-specific but the solution is globally expandable and right now there is no Urdu/English AI tool doing this for social sellers anywhere. We didn't pick it because it sounded cool. We picked it because we already talk to real users, we already have the data and we can have something in their hands within weeks.
+### 🧠 Daniyal Rashid
+* **AI Orchestration Research**: Investigated open-source agent (e.g. Gemma, Qwen etc) and API blueprints to connect parsed catalog data to Meta Cloud APIs and WhatsApp Business accounts.
 
 ---
 
-## 🚀 Getting Started — Clone & Contribute
+## 🚀 Key Features
 
-Follow these steps to get this repo on your machine and start contributing code.
-
-### 1. Prerequisites
-- Install [Git](https://git-scm.com/downloads)
-- A [GitHub account](https://github.com/join) added to the **Comebck-Pakistan** organization
-- _(Recommended)_ [VS Code](https://code.visualstudio.com/) and/or the
-  [GitHub CLI](https://cli.github.com/)
-
-### 2. Clone the repository
-```bash
-git clone https://github.com/Comebck-Pakistan/cohort-1-squad-deosai.git
-cd cohort-1-squad-deosai
-```
-
-### 3. Create a branch for your work
-Never commit straight to `main`. Create a branch for each feature or fix:
-```bash
-git checkout -b your-name/short-description
-```
-
-### 4. Make your changes, then stage and commit them
-```bash
-git add .
-git commit -m "Briefly describe what you changed"
-```
-
-### 5. Push your branch to GitHub
-```bash
-git push -u origin your-name/short-description
-```
-
-### 6. Open a Pull Request
-- Open the repo on GitHub and click **"Compare & pull request"**.
-- Describe your change, request a review from a squadmate, and merge once approved.
-
-### 🔄 Keep your local copy up to date
-Before starting new work, pull the latest `main`:
-```bash
-git checkout main
-git pull origin main
-```
+* **Interactive Setup Wizard**: Dynamic prompts, preset builder guidelines, negative constraints, and tone of voice configurations (including Pivotal Hinglish / Roman Urdu support).
+* **Grid Spreadsheet Editor**: Directly edit, search, and update uploaded Excel (.xlsx, .xls) and CSV (.csv) catalogs inside the browser.
+* **Live Playground Simulator**: Instant sandbox chat simulation where sellers can text the bot to verify prompt behaviors, brand memory constraints, and catalog matching.
+* **Order Tracking Center**: Dedicated dashboard monitoring pending, confirmed, and cancelled Cash-on-Delivery checkouts.
+* **Secure Admin Control Panel**: Dedicated directory panel `/admin` for the Deosai team to monitor sellers, verify catalog listings, and connect Meta WhatsApp Cloud configurations.
 
 ---
 
-> **Every squad member must contribute commits.** The challenge grades a real, honest
-> commit history that shows everyone built. Build in the open, ship the proof. 🚀
+## 🛠️ Project Structure & Getting Started
+
+The platform is structured as a modern Next.js workspace.
+
+### Prerequisites
+* **Node.js**: `v18.x` or higher
+* **Package Manager**: `npm`
+
+### Local Setup
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/Comebck-Pakistan/cohort-1-squad-deosai.git
+   cd cohort-1-squad-deosai/squad-deosai-next
+   ```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+3. **Run the local development server**:
+   ```bash
+   npm run dev
+   ```
+4. Open [http://localhost:3000](http://localhost:3000) to view the application in your browser.
+
+---
+
+> **Every squad member must contribute commits.** Build in the open, ship the proof. 🚀
