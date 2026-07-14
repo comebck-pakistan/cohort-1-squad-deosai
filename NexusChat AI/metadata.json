@@ -1,0 +1,6 @@
+{
+  "name": "NexusChat AI",
+  "description": "A premium SaaS web application for social sellers to configure an AI-powered customer support agent.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
