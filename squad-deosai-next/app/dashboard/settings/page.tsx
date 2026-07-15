@@ -22,6 +22,13 @@ const companySizes = [
 ];
 export default function SettingsPage() {
   const { user, loading: authLoading, signOut } = useAuth();
+
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+
   const [profile, setProfile] = useState({
     businessName: "",
     ownerName: "",
@@ -97,6 +104,49 @@ export default function SettingsPage() {
       setSaved(true); // Fallback indicator for demo
     }
     setSaving(false);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordLoading(true);
+    setPasswordError('');
+    setPasswordMessage('');
+
+    const supabase = createClient();
+
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setPasswordError('Please login first');
+      setPasswordLoading(false);
+      return;
+    }
+
+    // Step 1: Verify current password by signing in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user.email!,  // Make sure email is passed
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      setPasswordError('Current password is incorrect');
+      setPasswordLoading(false);
+      return;
+    }
+
+    // Step 2: Update to new password
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordMessage('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+    }
+    setPasswordLoading(false);
   };
 
   if (authLoading) {
@@ -239,6 +289,48 @@ export default function SettingsPage() {
             >
               Sign out
             </button>
+          </CardBody>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="lg:col-span-2">
+          <CardHeader title="Change Password" />
+          <CardBody className="pt-4">
+            <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
+              {passwordError && (
+                <div className="bg-red-50 text-red-500 p-3 rounded text-sm">
+                  {passwordError}
+                </div>
+              )}
+              {passwordMessage && (
+                <div className="bg-green-50 text-green-600 p-3 rounded text-sm">
+                  {passwordMessage}
+                </div>
+              )}
+              <div>
+                <Label htmlFor="current-password">Current Password</Label>
+                <Input
+                  id="current-password"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="new-password">New Password</Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={passwordLoading}>
+                {passwordLoading ? 'Updating...' : 'Update Password'}
+              </Button>
+            </form>
           </CardBody>
         </Card>
       </div>

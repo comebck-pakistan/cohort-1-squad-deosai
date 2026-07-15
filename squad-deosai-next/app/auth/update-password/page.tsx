@@ -10,9 +10,9 @@ export default function UpdatePasswordPage() {
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const supabase = createClient()
 
     useEffect(() => {
+        const supabase = createClient()
         const checkSession = async () => {
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) {
@@ -27,6 +27,7 @@ export default function UpdatePasswordPage() {
         setLoading(true)
         setError('')
         setMessage('')
+        const supabase = createClient()
 
         const { error } = await supabase.auth.updateUser({
             password: password,

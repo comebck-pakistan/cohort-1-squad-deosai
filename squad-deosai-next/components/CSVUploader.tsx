@@ -15,7 +15,6 @@ export default function CSVUploader() {
     const [file, setFile] = useState<File | null>(null)
     const [uploading, setUploading] = useState(false)
     const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
-    const supabase = createClient()
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0]
@@ -33,6 +32,7 @@ export default function CSVUploader() {
 
         setUploading(true)
         setMessage(null)
+        const supabase = createClient()
 
         try {
             // Get current user

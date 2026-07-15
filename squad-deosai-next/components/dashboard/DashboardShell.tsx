@@ -64,26 +64,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-paper">
       {/* desktop sidebar */}
-      <aside className="hidden w-64 flex-none flex-col border-r border-line bg-card p-4 lg:flex">
+      <aside className="hidden w-64 flex-none flex-col border-r border-line bg-card/95 p-4 glass-card lg:flex">
         <div className="px-2 py-2">
           <Link href="/">
             <Logo />
           </Link>
         </div>
-        <div className="mt-4 rounded-xl border border-line bg-paper px-3 py-2.5">
-          <p className="truncate text-sm font-semibold text-ink">
-            {user.businessName}
-          </p>
-          <Pulse
-            label="connected"
-            tone="live"
-            className="mt-1"
-          />
+        <div className="mt-4 rounded-3xl border border-line bg-white/85 px-4 py-3 shadow-sm">
+          <p className="truncate text-sm font-semibold text-ink">{user.businessName}</p>
+          <Pulse label="connected" tone="live" className="mt-2" />
         </div>
         <div className="mt-6">{navList}</div>
         <button
           onClick={signOut}
-          className="mt-auto rounded-xl px-3 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-paper-deep hover:text-danger"
+          className="mt-auto rounded-3xl px-3 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-paper-deep hover:text-danger"
         >
           Sign out
         </button>
@@ -91,7 +85,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
       {/* mobile top bar */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-3 border-b border-line bg-card px-4 py-3 lg:hidden">
+        <div className="flex items-center gap-3 border-b border-line bg-card/95 px-4 py-3 shadow-sm lg:hidden">
           <button
             aria-label="Open menu"
             aria-expanded={mobileOpen}
@@ -110,11 +104,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {mobileOpen ? (
-          <div className="border-b border-line bg-card px-4 py-3 lg:hidden">
+          <div className="border-b border-line bg-card/95 px-4 py-3 lg:hidden">
             {navList}
             <button
               onClick={signOut}
-              className="mt-2 w-full rounded-xl px-3 py-2.5 text-left text-sm text-ink-soft hover:text-danger"
+              className="mt-2 w-full rounded-3xl px-3 py-2.5 text-left text-sm text-ink-soft hover:text-danger"
             >
               Sign out
             </button>

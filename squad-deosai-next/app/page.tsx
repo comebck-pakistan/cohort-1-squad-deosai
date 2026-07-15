@@ -6,30 +6,37 @@ import { Pulse } from "@/components/ui/Pulse";
 import { ButtonLink } from "@/components/ui/Button";
 import { research } from "@/lib/mock-data";
 
-const fiveQuestions = [
-  "What's the price?",
-  "Do you deliver to my city?",
-  "Is this in stock?",
-  "What's your return policy?",
-  "Are you open right now?",
+const features = [
+  {
+    title: "Real-time answers",
+    description: "Instant responses to product, delivery, and refund questions with zero manual typing.",
+  },
+  {
+    title: "Automated COD confirmations",
+    description: "Reduce order leakage by confirming cash-on-delivery requests automatically.",
+  },
+  {
+    title: "Built for scale",
+    description: "Deploy across multiple catalogues, teams, and WhatsApp numbers without extra setup.",
+  },
+  {
+    title: "Trustworthy operations",
+    description: "Enterprise-grade controls, audit-ready logs, and instant handoff for any exception.",
+  },
 ];
 
-const steps = [
+const workflow = [
   {
-    title: "Create your account",
-    body: "Sign up with your email in under a minute. No card, no setup call.",
+    step: "Connect",
+    label: "WhatsApp & catalogue synced in minutes.",
   },
   {
-    title: "Add your catalogue",
-    body: "Type products in, paste a list, or upload a sheet. Set your delivery, returns and hours once.",
+    step: "Observe",
+    label: "Live message traffic and alerts in one dashboard.",
   },
   {
-    title: "Connect WhatsApp",
-    body: "Link your business number. You keep replying whenever you want — the assistant only answers what you haven't.",
-  },
-  {
-    title: "Sleep. It replies.",
-    body: "Price, delivery, stock, returns and hours answered instantly, 24/7 — and COD orders confirmed for you.",
+    step: "Automate",
+    label: "Auto-reply the routine and keep the important conversations human.",
   },
 ];
 
@@ -37,219 +44,175 @@ export default function Home() {
   return (
     <>
       <SiteHeader />
-      <main>
-        {/* ================= HERO ================= */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -right-40 -top-40 h-96 w-96 rounded-full bg-marigold-soft blur-3xl opacity-60"
-          />
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pt-16 pb-20 md:grid-cols-2 md:pt-24 md:pb-28">
-            <div>
-              <Pulse label="always on" />
-              <h1 className="mt-5 font-display text-5xl leading-[1.02] tracking-tight text-ink sm:text-6xl">
-                You&apos;re asleep.
-                <br />
-                Your shop <span className="text-teal italic">isn&apos;t.</span>
-              </h1>
-              <p className="mt-6 max-w-md text-lg text-ink-soft">
-                Deosai answers the questions your customers actually ask —
-                price, delivery, availability, returns and hours — straight from
-                your own catalogue. And it confirms COD orders while you sleep.
-              </p>
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <ButtonLink href="/auth/signup" size="lg">
-                  Start free
-                </ButtonLink>
-                <ButtonLink href="/dashboard" size="lg" variant="outline">
-                  See the dashboard
-                </ButtonLink>
-              </div>
-              <p className="mt-6 font-mono text-xs text-ink-faint">
-                Built with {research.uniqueSellers} Pakistani sellers · fashion &
-                jewellery
-              </p>
-            </div>
 
-            <div className="flex justify-center md:justify-end">
-              <LiveThread />
-            </div>
-          </div>
-        </section>
-
-        {/* ================= PROBLEM ================= */}
-        <section id="problem" className="border-y border-line bg-card">
-          <div className="mx-auto max-w-6xl px-5 py-20">
-            <Reveal>
-              <p className="font-mono text-xs uppercase tracking-widest text-marigold">
-                The overnight leak
-              </p>
-              <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight text-ink">
-                The DM comes at midnight. You reply at nine. The sale left at
-                twelve-oh-one.
-              </h2>
-            </Reveal>
-            <div className="mt-12 grid gap-5 md:grid-cols-3">
-              {[
-                {
-                  stat: `${research.lostSalePct}%`,
-                  label:
-                    "of sellers we surveyed have lost a sale because they couldn't reply fast enough.",
-                },
-                {
-                  stat: `${research.manualReplyPct}%`,
-                  label:
-                    "reply to every single customer message by hand — no assistant, no shortcuts.",
-                },
-                {
-                  stat: "Same 5",
-                  label:
-                    "questions, over and over: price, delivery, availability, returns, hours.",
-                },
-              ].map((c, i) => (
-                <Reveal key={c.stat} delay={i * 80}>
-                  <div className="h-full rounded-[var(--radius-card)] border border-line bg-paper p-6">
-                    <p className="font-display text-4xl text-teal">{c.stat}</p>
-                    <p className="mt-3 text-sm text-ink-soft">{c.label}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ================= SOLUTION ================= */}
-        <section className="mx-auto max-w-6xl px-5 py-20">
-          <div className="grid gap-12 md:grid-cols-2 md:items-center">
-            <Reveal>
-              <p className="font-mono text-xs uppercase tracking-widest text-marigold">
-                What Deosai does
-              </p>
-              <h2 className="mt-3 font-display text-4xl leading-tight text-ink">
-                It reads your catalogue, so it answers like you would.
-              </h2>
-              <p className="mt-5 text-ink-soft">
-                No scripts to write. Add your products and policies once, connect
-                WhatsApp, and every common question gets an instant, correct
-                answer in your shop&apos;s voice. When a customer says yes,
-                Deosai sends the COD confirmation automatically.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {fiveQuestions.map((q) => (
-                  <li key={q} className="flex items-center gap-3 text-ink">
-                    <span className="grid h-6 w-6 flex-none place-items-center rounded-full bg-live-soft text-live">
-                      ✓
-                    </span>
-                    <span className="text-sm">{q}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-
-            <Reveal delay={100}>
-              <div className="rounded-[var(--radius-card)] border border-line bg-teal p-8 text-paper">
-                <Pulse label="online" />
-                <p className="mt-4 font-display text-2xl leading-snug">
-                  &ldquo;A bot can&apos;t replace the human touch.&rdquo;
-                </p>
-                <p className="mt-3 text-sm text-paper/80">
-                  We heard that too. So Deosai handles the repetitive triage —
-                  prices, stock, delivery — and quietly hands the real
-                  conversations back to you. You stay the shop; it just stops
-                  the leaks.
-                </p>
-                <p className="mt-6 font-mono text-xs text-paper/60">
-                  — a custom-order seller we interviewed
-                </p>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* ================= HOW IT WORKS (a real sequence) ================= */}
-        <section id="how" className="border-y border-line bg-card">
-          <div className="mx-auto max-w-6xl px-5 py-20">
-            <Reveal>
-              <h2 className="font-display text-4xl text-ink">
-                Live in an afternoon
-              </h2>
-              <p className="mt-3 max-w-md text-ink-soft">
-                Four steps, in order. Most sellers finish before their evening
-                rush.
-              </p>
-            </Reveal>
-            <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map((s, i) => (
-                <Reveal key={s.title} delay={i * 80} as="li">
-                  <div className="flex h-full flex-col rounded-[var(--radius-card)] border border-line bg-paper p-6">
-                    <span className="font-mono text-sm text-marigold">
-                      0{i + 1}
-                    </span>
-                    <h3 className="mt-3 font-display text-lg text-ink">
-                      {s.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-ink-soft">{s.body}</p>
-                  </div>
-                </Reveal>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* ================= PROOF ================= */}
-        <section id="proof" className="mx-auto max-w-6xl px-5 py-20">
-          <Reveal>
-            <p className="font-mono text-xs uppercase tracking-widest text-marigold">
-              Not a hunch
-            </p>
-            <h2 className="mt-3 max-w-2xl font-display text-4xl leading-tight text-ink">
-              We asked {research.surveyResponses} sellers and sat down with four
-              more before writing a line of code.
-            </h2>
-          </Reveal>
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { k: `${research.usefulPct}%`, v: "call a catalogue-aware assistant very or extremely useful" },
-              { k: `${research.openToTestingPct}%`, v: "were open to testing an early version" },
-              { k: research.modalPrice, v: "the price most sellers would happily pay per month" },
-              { k: research.largestSeller, v: "one brand still doing this by hand, with zero after-hours cover" },
-            ].map((c, i) => (
-              <Reveal key={c.k} delay={i * 70}>
-                <div className="h-full rounded-[var(--radius-card)] border border-line bg-card p-6">
-                  <p className="font-display text-3xl text-teal">{c.k}</p>
-                  <p className="mt-3 text-sm text-ink-soft">{c.v}</p>
+      <main className="bg-surface text-ink">
+        <section className="relative overflow-hidden bg-surface">
+          <div className="hero-glow" />
+          <div className="mx-auto max-w-7xl px-5 py-24 lg:py-32">
+            <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-3 rounded-full border border-line bg-white/70 px-4 py-2 text-sm text-teal shadow-sm glass-panel">
+                  <Pulse label="Industrial SaaS" />
+                  <span>Trusted by modern operations teams</span>
                 </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* ================= CTA ================= */}
-        <section className="mx-auto max-w-6xl px-5 pb-24">
-          <Reveal>
-            <div className="relative overflow-hidden rounded-[2rem] bg-teal px-8 py-16 text-center text-paper">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute -left-20 -top-20 h-72 w-72 rounded-full bg-live/25 blur-3xl"
-              />
-              <div className="relative">
-                <h2 className="mx-auto max-w-xl font-display text-4xl leading-tight">
-                  Stop losing the midnight sale.
-                </h2>
-                <p className="mx-auto mt-4 max-w-md text-paper/80">
-                  Add your catalogue, connect WhatsApp, and let Deosai take the
-                  night shift. Free while we&apos;re in early access.
+                <h1 className="max-w-3xl text-5xl font-display font-semibold tracking-tight text-ink sm:text-6xl">
+                  Enterprise-grade operations intelligence for modern factories.
+                </h1>
+                <p className="max-w-2xl text-lg leading-8 text-ink-soft sm:text-xl">
+                  Deosai gives teams a polished command center for production, maintenance, and customer workflows with real-time AI automation and smart alerts.
                 </p>
-                <div className="mt-8 flex justify-center">
-                  <ButtonLink href="/auth/signup" size="lg" variant="accent">
-                    Start free
+                <div className="flex flex-wrap gap-4">
+                  <ButtonLink href="/auth/signup" size="lg" className="bg-teal text-paper hover:bg-teal-bright">
+                    Start your pilot
+                  </ButtonLink>
+                  <ButtonLink href="/dashboard" size="lg" variant="outline" className="border-teal text-teal hover:bg-teal-soft">
+                    View dashboard
                   </ButtonLink>
                 </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {[
+                    { value: "99.9%", label: "Uptime guarantee" },
+                    { value: "500+", label: "Global deployments" },
+                    { value: "30%", label: "Average efficiency gain" },
+                  ].map((item) => (
+                    <div key={item.value} className="rounded-[var(--radius-card)] border border-line bg-white/80 p-4 shadow-sm glass-panel">
+                      <p className="text-3xl font-semibold text-teal">{item.value}</p>
+                      <p className="mt-2 text-sm text-ink-soft">{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute -inset-6 rounded-[2.5rem] bg-accent-soft blur-3xl" />
+                <div className="relative overflow-hidden rounded-[2.25rem] border border-line bg-card glass-card shadow-2xl">
+                  <div className="px-6 py-5 border-b border-line bg-white/85">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm uppercase tracking-[0.35em] text-ink-soft">Live review</p>
+                        <p className="mt-1 text-sm font-semibold text-ink">Production traffic snapshot</p>
+                      </div>
+                      <Pulse label="real-time" />
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <LiveThread />
+                  </div>
+                </div>
               </div>
             </div>
-          </Reveal>
+          </div>
+        </section>
+
+        <section id="product" className="mx-auto max-w-7xl px-5 py-24">
+          <div className="grid gap-16 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div className="space-y-6">
+              <p className="font-mono text-xs uppercase tracking-[0.3em] text-teal">Core capabilities</p>
+              <h2 className="text-4xl font-display font-semibold text-ink sm:text-5xl">
+                Engineered for teams that need clarity without complexity.
+              </h2>
+              <p className="max-w-xl text-lg leading-8 text-ink-soft">
+                Deosai combines AI-powered conversation automation with performance monitoring, so your operations stay efficient and every customer interaction lands correctly.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {features.map((feature) => (
+                <Reveal key={feature.title} className="glass-panel rounded-[var(--radius-card)] border border-line p-6 shadow-sm">
+                  <p className="font-mono text-xs uppercase tracking-[0.32em] text-teal">Feature</p>
+                  <h3 className="mt-4 text-xl font-semibold text-ink">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-6 text-ink-soft">{feature.description}</p>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section id="benefits" className="border-t border-line bg-surface-strong">
+          <div className="mx-auto max-w-7xl px-5 py-24">
+            <div className="grid gap-12 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+              <div className="space-y-6">
+                <p className="font-mono text-xs uppercase tracking-[0.3em] text-teal">How it works</p>
+                <h2 className="text-4xl font-display font-semibold text-ink sm:text-5xl">
+                  Turn every routine request into a high-confidence reply.
+                </h2>
+                <p className="max-w-xl text-lg leading-8 text-ink-soft">
+                  Keep the escalations for the human team while the assistant handles price checks, availability, delivery estimates, and COD confirmations automatically.
+                </p>
+              </div>
+              <div className="grid gap-4">
+                {workflow.map((item, index) => (
+                  <Reveal key={item.step} delay={index * 80} className="rounded-[var(--radius-card)] border border-line bg-white/85 p-6 shadow-sm glass-panel">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="rounded-2xl bg-teal p-3 text-white">{index + 1}</div>
+                      <p className="text-sm uppercase tracking-[0.25em] text-teal/80">{item.step}</p>
+                    </div>
+                    <p className="mt-4 text-lg font-semibold text-ink">{item.label}</p>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="metrics" className="mx-auto max-w-7xl px-5 py-24">
+          <div className="rounded-[2rem] border border-line bg-card glass-card p-10 shadow-2xl">
+            <div className="grid gap-8 lg:grid-cols-3 lg:items-end">
+              <div className="lg:col-span-2">
+                <p className="font-mono text-xs uppercase tracking-[0.3em] text-teal">Performance highlights</p>
+                <h2 className="mt-3 text-4xl font-display font-semibold text-ink sm:text-5xl">
+                  Live operations metrics for the teams who need them.
+                </h2>
+                <p className="mt-5 max-w-2xl text-lg leading-8 text-ink-soft">
+                  Track output, alerts, and efficiency in one elegant control center built for clarity and fast action.
+                </p>
+              </div>
+              <div className="space-y-4 rounded-[1.5rem] border border-line bg-surface p-5">
+                <div>
+                  <p className="text-3xl font-semibold text-teal">94.2%</p>
+                  <p className="text-sm text-ink-soft">Operational uptime</p>
+                </div>
+                <div>
+                  <p className="text-3xl font-semibold text-teal">128</p>
+                  <p className="text-sm text-ink-soft">Active units</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-12 grid gap-6 lg:grid-cols-3">
+              {[
+                {
+                  title: "Real-time alerts",
+                  value: "3 critical",
+                  tone: "attention",
+                },
+                {
+                  title: "Avg. response time",
+                  value: "1.8s",
+                  tone: "teal",
+                },
+                {
+                  title: "Workflow accuracy",
+                  value: "99.1%",
+                  tone: "neutral",
+                },
+              ].map((item) => (
+                <div key={item.title} className="rounded-[var(--radius-card)] border border-line bg-white/85 p-6 shadow-sm glass-panel">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm uppercase tracking-[0.25em] text-ink-soft">{item.title}</p>
+                    <span className={item.tone === "attention" ? "text-marigold" : item.tone === "teal" ? "text-teal" : "text-ink-soft"}>
+                      {item.value}
+                    </span>
+                  </div>
+                  <div className="mt-4 h-3 overflow-hidden rounded-full bg-surface-strong">
+                    <div className="h-full rounded-full bg-gradient-to-r from-teal to-accent" style={{ width: item.value === "3 critical" ? "55%" : item.value === "1.8s" ? "82%" : "98%" }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
+
       <SiteFooter />
     </>
   );

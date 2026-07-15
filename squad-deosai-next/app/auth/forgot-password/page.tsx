@@ -8,9 +8,14 @@ export default function ForgotPasswordPage() {
     const [message, setMessage] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const supabase = createClient()
 
     const handleReset = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+        setMessage('')
+
+        const supabase = createClient()
         e.preventDefault()
         setLoading(true)
         setError('')
@@ -23,7 +28,7 @@ export default function ForgotPasswordPage() {
         if (error) {
             setError(error.message)
         } else {
-            setMessage('✅ Password reset link sent! Check your email.')
+            setMessage('Password reset link sent! Check your email.')
         }
         setLoading(false)
     }
