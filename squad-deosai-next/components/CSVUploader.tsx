@@ -131,7 +131,7 @@ export default function CSVUploader() {
     }
 
     return (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="rounded-[var(--radius-card)] border-2 border-dashed border-line bg-paper/60 p-6">
             <div className="text-center">
                 <div className="mt-2">
                     <input
@@ -139,28 +139,28 @@ export default function CSVUploader() {
                         type="file"
                         accept=".csv"
                         onChange={handleFileChange}
-                        className="block w-full text-sm text-gray-500
+                        className="block w-full text-sm text-ink-soft
               file:mr-4 file:py-2 file:px-4
               file:rounded-full file:border-0
               file:text-sm file:font-semibold
-              file:bg-blue-50 file:text-blue-700
-              hover:file:bg-blue-100"
+              file:bg-teal-soft file:text-teal
+              hover:file:bg-teal hover:file:text-paper file:transition-colors"
                     />
                 </div>
                 {file && (
-                    <p className="mt-2 text-sm text-gray-600">
+                    <p className="mt-2 text-sm text-ink-soft">
                         Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
                     </p>
                 )}
                 <button
                     onClick={handleUpload}
                     disabled={!file || uploading}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="mt-4 rounded-xl bg-teal px-4 py-2 text-sm font-semibold text-paper transition-colors hover:bg-teal-bright disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {uploading ? 'Uploading...' : 'Upload Catalogue'}
                 </button>
                 {message && (
-                    <p className={`mt-2 text-sm ${message.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                    <p className={`mt-2 text-sm ${message.type === 'success' ? 'text-teal' : 'text-danger'}`}>
                         {message.text}
                     </p>
                 )}

@@ -63,34 +63,34 @@ export function LiveThread() {
   }, []);
 
   return (
-    <div className="w-full max-w-sm rounded-[1.75rem] border border-line bg-card p-2 shadow-[0_30px_80px_-40px_rgba(15,76,70,0.55)]">
+    <div className="w-full max-w-sm rounded-[1.75rem] border border-hairline bg-snow p-2 shadow-[0_40px_90px_-45px_rgba(18,45,39,0.45)]">
       {/* thread header */}
-      <div className="flex items-center gap-3 rounded-[1.4rem] bg-teal px-4 py-3 text-paper">
-        <div className="grid h-9 w-9 place-items-center rounded-full bg-paper/15 font-display text-sm">
+      <div className="flex items-center gap-3 rounded-[1.4rem] bg-forest px-4 py-3 text-snow">
+        <div className="grid h-9 w-9 place-items-center rounded-full bg-green font-display text-sm font-bold text-snow">
           M
         </div>
         <div className="leading-tight">
           <p className="font-sans text-sm font-semibold">Meher Handmade</p>
-          <Pulse label="auto-replying" className="mt-0.5" />
+          <Pulse label="auto-replying" onDark className="mt-0.5" />
         </div>
-        <span className="ml-auto font-mono text-[11px] text-paper/70">
+        <span className="ml-auto font-mono text-[11px] text-white/60">
           2:47 AM
         </span>
       </div>
 
       {/* messages */}
       <div className="flex min-h-70 flex-col gap-2.5 px-3 py-4">
-        <p className="mx-auto rounded-full bg-paper-deep px-3 py-1 font-mono text-[11px] text-ink-faint">
+        <p className="mx-auto rounded-full bg-mist px-3 py-1 font-mono text-[11px] text-slate-faint">
           after hours · you&apos;re asleep
         </p>
 
         {items.map((m, i) =>
           m.type === "customer" ? (
             <div key={i} className="bubble-in max-w-[80%] self-start">
-              <div className="rounded-2xl rounded-bl-md bg-paper-deep px-3.5 py-2 text-sm text-ink">
+              <div className="rounded-2xl rounded-bl-md bg-mist px-3.5 py-2 text-sm text-coal">
                 {m.text}
               </div>
-              <span className="mt-1 block pl-1 font-mono text-[10px] text-ink-faint">
+              <span className="mt-1 block pl-1 font-mono text-[10px] text-slate-faint">
                 {m.at}
               </span>
             </div>
@@ -99,18 +99,18 @@ export function LiveThread() {
               <div
                 className={
                   m.kind === "cod"
-                    ? "rounded-2xl rounded-br-md border border-live/40 bg-live-soft px-3.5 py-2 text-left text-sm text-ink"
-                    : "rounded-2xl rounded-br-md bg-teal px-3.5 py-2 text-left text-sm text-paper"
+                    ? "rounded-2xl rounded-br-md border border-green-tint bg-green-soft px-3.5 py-2 text-left text-sm text-coal"
+                    : "rounded-2xl rounded-br-md bg-green px-3.5 py-2 text-left text-sm text-snow"
                 }
               >
                 {m.kind === "cod" ? (
-                  <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-live">
+                  <span className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-green-deep">
                     COD confirmation · sent for you
                   </span>
                 ) : null}
                 {m.text}
               </div>
-              <span className="mt-1 inline-flex items-center gap-1 pr-1 font-mono text-[10px] text-ink-faint">
+              <span className="mt-1 inline-flex items-center gap-1 pr-1 font-mono text-[10px] text-slate-faint">
                 {m.kind === "cod" ? "auto-sent" : "auto-reply"} · {m.at}
               </span>
             </div>
@@ -119,14 +119,14 @@ export function LiveThread() {
 
         {typing ? (
           <div className="max-w-[60%] self-end">
-            <div className="inline-flex gap-1 rounded-2xl rounded-br-md bg-teal px-4 py-3">
-              <span className="typing-dot h-1.5 w-1.5 rounded-full bg-paper" />
+            <div className="inline-flex gap-1 rounded-2xl rounded-br-md bg-green px-4 py-3">
+              <span className="typing-dot h-1.5 w-1.5 rounded-full bg-snow" />
               <span
-                className="typing-dot h-1.5 w-1.5 rounded-full bg-paper"
+                className="typing-dot h-1.5 w-1.5 rounded-full bg-snow"
                 style={{ animationDelay: "0.15s" }}
               />
               <span
-                className="typing-dot h-1.5 w-1.5 rounded-full bg-paper"
+                className="typing-dot h-1.5 w-1.5 rounded-full bg-snow"
                 style={{ animationDelay: "0.3s" }}
               />
             </div>

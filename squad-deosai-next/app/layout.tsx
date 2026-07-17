@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope, IBM_Plex_Mono } from "next/font/google";
+import { Manrope, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const display = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  display: "swap",
-});
-
+// Manrope is the Docushield style-guide primary typeface, used for both
+// headings and body. Full weight range so display headings can sit at a
+// refined 600/700 rather than a punchy 800.
 const sans = Manrope({
   variable: "--font-manrope",
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -35,9 +33,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
-      <body className="bg-paper text-ink font-sans min-h-full flex flex-col">
+      <body className="bg-snow text-coal font-sans min-h-full flex flex-col">
         {children}
       </body>
     </html>
