@@ -1,37 +1,98 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Deosai design tokens — "Presence"
-   Warm paper + deep teal + marigold, with a jade "live" green
-   reserved for connected / auto-replied states.
+   Deosai design tokens — Docushield-derived "deep forest" scheme
+   Sourced from the Docushield style guide: a muted, confident
+   teal-green primary scale (Primary/500 #2A6C5C → Primary/900
+   #122D27) on cool neutrals, with Manrope + tight heading
+   tracking. Calmer and more intentional than a neon accent.
+   The legacy token names below are remapped onto this same
+   scheme so the landing, dashboard, auth and admin screens all
+   share one design system.
    ============================================================ */
 @theme {
-  --color-ink: #211d18;
-  --color-ink-soft: #57514a;
-  --color-ink-faint: #8c857b;
+  /* ---- Primary scale (Docushield) ---- */
+  --color-primary-50: #eaf0ef;
+  --color-primary-100: #bdd1cc;
+  --color-primary-200: #9dbbb4;
+  --color-primary-300: #709d92;
+  --color-primary-400: #55897d;
+  --color-primary-500: #2a6c5c;
+  --color-primary-600: #266254;
+  --color-primary-700: #1e4d41;
+  --color-primary-800: #173b33;
+  --color-primary-900: #122d27;
 
-  --color-paper: #f4eee2;
-  --color-paper-deep: #ece3d2;
-  --color-card: #fbf7ee;
+  /* ---- Semantic green aliases (landing) ---- */
+  --color-green: #2a6c5c; /* Primary/500 — main brand */
+  --color-green-bright: #327d6b; /* subtle lighter accent */
+  --color-green-deep: #1e4d41; /* Primary/700 — text on light */
+  --color-green-soft: #eaf0ef; /* Primary/50 — chip fills */
+  --color-green-tint: #d7e4df; /* soft borders */
 
-  --color-teal: #0f4c46;
-  --color-teal-bright: #12695e;
-  --color-teal-soft: #dcebe6;
+  /* ---- Deep forest surfaces (banners / dark bands) ---- */
+  --color-forest: #122d27; /* Primary/900 */
+  --color-forest-2: #173b33; /* Primary/800 */
 
-  --color-marigold: #e39a2e;
-  --color-marigold-soft: #f6e6c8;
+  --color-snow: #ffffff;
+  --color-mist: #fafafa;
+  --color-hairline: #e5e5e5;
 
-  --color-live: #3e9e7e;
-  --color-live-soft: #d9efe5;
+  --color-coal: #101613; /* near-black text, whisper of forest */
+  --color-coal-2: #151a17;
+  --color-graphite: #232b27;
+  --color-slate: #5c6160; /* Neutral/300 — body text */
+  --color-slate-faint: #9e9e9e; /* muted labels */
 
-  --color-line: #e4dbc9;
+  /* ---- Legacy tokens, remapped onto the forest scheme ----
+     These names still power the dashboard / auth / admin screens.
+     Remapping them here migrates every internal page to the
+     Docushield greens + neutrals without touching each file. */
+  --color-ink: #101613; /* = coal */
+  --color-ink-soft: #5c6160; /* = slate */
+  --color-ink-faint: #9e9e9e; /* = slate-faint */
+
+  --color-paper: #f4f7f5; /* app canvas — cool neutral */
+  --color-paper-deep: #e9efed; /* subtle raised fill */
+  --color-card: #ffffff; /* = snow */
+
+  --color-teal: #2a6c5c; /* = green Primary/500 */
+  --color-teal-bright: #327d6b;
+  --color-teal-soft: #eaf0ef; /* = green-soft */
+
+  /* Warm accent kept for warnings / attention states only */
+  --color-marigold: #c98a2e;
+  --color-marigold-soft: #f6ead2;
+
+  --color-live: #2a6c5c; /* presence = brand green */
+  --color-live-soft: #eaf0ef;
+
+  --color-line: #e5e5e5; /* = hairline */
   --color-danger: #b4472f;
 
-  --font-display: var(--font-fraunces), Georgia, serif;
+  --color-clay: #b4472f;
+  --color-clay-ink: #7c2f20;
+  --color-clay-soft: #f6e0da;
+
+  /* Manrope everywhere, matching the Docushield style guide */
+  --font-display: var(--font-manrope), system-ui, sans-serif;
   --font-sans: var(--font-manrope), system-ui, sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --radius-card: 1.25rem;
+}
+
+/* ============================================================
+   Docushield type rhythm — Manrope headings carry tight,
+   slightly negative tracking (‑2% to ‑3%) and compact leading.
+   ============================================================ */
+.font-display {
+  letter-spacing: -0.02em;
+}
+h1.font-display,
+.display-xl {
+  letter-spacing: -0.03em;
+  line-height: 1.05;
 }
 
 /* Base */
@@ -47,14 +108,57 @@ body {
 
 /* Visible keyboard focus everywhere */
 :where(a, button, input, textarea, select, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-teal-bright);
+  outline: 2px solid var(--color-green-deep);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 ::selection {
-  background: var(--color-marigold-soft);
-  color: var(--color-ink);
+  background: var(--color-green);
+  color: var(--color-coal);
+}
+
+/* Marquee for the seller / tools strips */
+@keyframes deosai-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee-track {
+  animation: deosai-marquee 26s linear infinite;
+}
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+}
+
+/* ============================================================
+   Docushield banner texture — soft diagonal light stripes over
+   the deep-forest surfaces, echoing the style guide's banner.
+   ============================================================ */
+.banner-stripes {
+  background-image: repeating-linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.05) 0,
+    rgba(255, 255, 255, 0.05) 2px,
+    transparent 2px,
+    transparent 30px
+  );
 }
 
 /* ============================================================
@@ -62,13 +166,13 @@ body {
    ============================================================ */
 @keyframes deosai-pulse {
   0% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 55%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-green) 55%, transparent);
   }
   70% {
-    box-shadow: 0 0 0 0.55rem color-mix(in srgb, var(--color-live) 0%, transparent);
+    box-shadow: 0 0 0 0.55rem color-mix(in srgb, var(--color-green) 0%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-live) 0%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-green) 0%, transparent);
   }
 }
 
@@ -133,5 +237,8 @@ body {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+  .marquee-track {
+    animation: none !important;
   }
 }

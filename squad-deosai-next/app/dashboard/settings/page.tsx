@@ -298,12 +298,12 @@ export default function SettingsPage() {
           <CardBody className="pt-4">
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
               {passwordError && (
-                <div className="bg-red-50 text-red-500 p-3 rounded text-sm">
+                <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
                   {passwordError}
                 </div>
               )}
               {passwordMessage && (
-                <div className="bg-green-50 text-green-600 p-3 rounded text-sm">
+                <div className="rounded-xl border border-teal/30 bg-teal-soft px-4 py-3 text-sm text-teal">
                   {passwordMessage}
                 </div>
               )}

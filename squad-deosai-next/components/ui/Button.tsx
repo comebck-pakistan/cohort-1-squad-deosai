@@ -1,17 +1,30 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type Variant = "primary" | "accent" | "outline" | "ghost";
+type Variant =
+  | "primary"
+  | "green"
+  | "dark"
+  | "accent"
+  | "white"
+  | "outline"
+  | "ghost";
 type Size = "sm" | "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 font-sans font-semibold rounded-full transition-colors transition-transform duration-150 active:translate-y-px disabled:opacity-50 disabled:pointer-events-none";
 
 const variants: Record<Variant, string> = {
-  primary: "bg-teal text-paper hover:bg-teal-bright",
-  accent: "bg-marigold text-ink hover:brightness-105",
-  outline: "border border-line bg-transparent text-ink hover:border-teal hover:text-teal",
-  ghost: "bg-transparent text-ink hover:bg-teal-soft",
+  primary:
+    "bg-green text-snow hover:bg-green-deep shadow-[0_14px_34px_-16px_rgba(18,45,39,0.75)]",
+  green:
+    "bg-green text-snow hover:bg-green-deep shadow-[0_14px_34px_-16px_rgba(18,45,39,0.75)]",
+  dark: "bg-forest text-snow hover:bg-forest-2",
+  accent: "bg-green text-snow hover:bg-green-deep",
+  white: "bg-white text-forest hover:bg-primary-50",
+  outline:
+    "border border-hairline bg-transparent text-coal hover:border-green hover:text-green-deep",
+  ghost: "bg-transparent text-coal hover:bg-green-soft",
 };
 
 const sizes: Record<Size, string> = {
