@@ -2,6 +2,10 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+import { Logo } from '@/components/ui/Logo'
+import { Button } from '@/components/ui/Button'
+import { Input, Label } from '@/components/ui/Field'
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('')
@@ -16,10 +20,6 @@ export default function ForgotPasswordPage() {
         setMessage('')
 
         const supabase = createClient()
-        e.preventDefault()
-        setLoading(true)
-        setError('')
-        setMessage('')
 
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
             redirectTo: `${window.location.origin}/auth/update-password`,
@@ -34,43 +34,69 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
-                <h2 className="text-2xl font-bold text-center">Reset Password</h2>
-                <p className="text-center text-gray-600 mt-2">
-                    Enter your email and we'll send you a reset link.
-                </p>
-                <form onSubmit={handleReset} className="mt-6 space-y-4">
-                    {error && (
-                        <div className="bg-red-50 text-red-500 p-3 rounded text-sm">
-                            {error}
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-16">
+            <div
+                aria-hidden
+                className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-teal-soft blur-3xl opacity-50"
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-marigold-soft blur-3xl opacity-60"
+            />
+
+            <div className="relative z-10 w-full max-w-md space-y-8">
+                <div className="flex flex-col items-center gap-4">
+                    <Link href="/" aria-label="Back to home">
+                        <Logo />
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="font-display text-3xl tracking-tight text-ink">
+                            Reset Password
+                        </h1>
+                        <p className="mt-2 text-sm text-ink-soft">
+                            Enter your email and we'll send you a reset link.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
+                    <form onSubmit={handleReset} className="space-y-5">
+                        {error && (
+                            <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+                                {error}
+                            </div>
+                        )}
+                        {message && (
+                            <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
+                                {message}
+                            </div>
+                        )}
+                        <div>
+                            <Label htmlFor="email">Email</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="seller@example.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
                         </div>
-                    )}
-                    {message && (
-                        <div className="bg-green-50 text-green-600 p-3 rounded text-sm">
-                            {message}
-                        </div>
-                    )}
-                    <input
-                        type="email"
-                        placeholder="seller@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        {loading ? 'Sending...' : 'Send Reset Link'}
-                    </button>
-                </form>
-                <p className="text-center text-sm mt-4">
-                    <a href="/auth/login" className="text-blue-600 hover:underline">
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full"
+                            size="lg"
+                        >
+                            {loading ? 'Sending...' : 'Send Reset Link'}
+                        </Button>
+                    </form>
+                </div>
+
+                <p className="text-center text-sm text-ink-soft">
+                    <Link href="/auth/login" className="font-medium text-teal transition-colors hover:text-teal-bright">
                         Back to Login
-                    </a>
+                    </Link>
                 </p>
             </div>
         </div>

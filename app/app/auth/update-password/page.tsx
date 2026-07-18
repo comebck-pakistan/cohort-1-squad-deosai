@@ -3,6 +3,10 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Logo } from '@/components/ui/Logo'
+import { Button } from '@/components/ui/Button'
+import { Input, Label } from '@/components/ui/Field'
 
 export default function UpdatePasswordPage() {
     const [password, setPassword] = useState('')
@@ -12,15 +16,15 @@ export default function UpdatePasswordPage() {
     const router = useRouter()
 
     useEffect(() => {
-        const supabase = createClient()
         const checkSession = async () => {
+            const supabase = createClient()
             const { data: { session } } = await supabase.auth.getSession()
             if (!session) {
                 router.push('/auth/login')
             }
         }
         checkSession()
-    }, [])
+    }, [router])
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -43,39 +47,64 @@ export default function UpdatePasswordPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full p-8 bg-white rounded-lg shadow">
-                <h2 className="text-2xl font-bold text-center">Update Password</h2>
-                <p className="text-center text-gray-600 mt-2">
-                    Enter your new password below.
-                </p>
-                <form onSubmit={handleUpdate} className="mt-6 space-y-4">
-                    {error && (
-                        <div className="bg-red-50 text-red-500 p-3 rounded text-sm">
-                            {error}
+        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-16">
+            <div
+                aria-hidden
+                className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-teal-soft blur-3xl opacity-50"
+            />
+            <div
+                aria-hidden
+                className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-marigold-soft blur-3xl opacity-60"
+            />
+
+            <div className="relative z-10 w-full max-w-md space-y-8">
+                <div className="flex flex-col items-center gap-4">
+                    <Link href="/" aria-label="Back to home">
+                        <Logo />
+                    </Link>
+                    <div className="text-center">
+                        <h1 className="font-display text-3xl tracking-tight text-ink">
+                            Update Password
+                        </h1>
+                        <p className="mt-2 text-sm text-ink-soft">
+                            Enter your new password below.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
+                    <form onSubmit={handleUpdate} className="space-y-5">
+                        {error && (
+                            <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
+                                {error}
+                            </div>
+                        )}
+                        {message && (
+                            <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3 text-sm text-success">
+                                {message}
+                            </div>
+                        )}
+                        <div>
+                            <Label htmlFor="password">New Password</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
                         </div>
-                    )}
-                    {message && (
-                        <div className="bg-green-50 text-green-600 p-3 rounded text-sm">
-                            {message}
-                        </div>
-                    )}
-                    <input
-                        type="password"
-                        placeholder="New password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        {loading ? 'Updating...' : 'Update Password'}
-                    </button>
-                </form>
+                        <Button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full"
+                            size="lg"
+                        >
+                            {loading ? 'Updating...' : 'Update Password'}
+                        </Button>
+                    </form>
+                </div>
             </div>
         </div>
     )
