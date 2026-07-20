@@ -10,49 +10,34 @@ import { Input, Label, Select, Textarea } from "@/components/ui/Field";
 import Link from "next/link";
 
 // ============================================
-// STEP 1: WELCOME
-// ============================================
-function Step1_Welcome({ onNext }: { onNext: () => void }) {
-  return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 text-center shadow-sm">
-      <div className="mb-6 text-5xl">🚀</div>
-      <h2 className="font-display text-3xl tracking-tight text-ink mb-3">
-        Welcome to Deosai Chat!
-      </h2>
-      <p className="text-ink-soft mb-6 text-lg">
-        Let's set up your AI support agent.<br />
-        <span className="text-sm">It only takes 5 minutes!</span>
-      </p>
-      <div className="rounded-xl border border-teal/20 bg-teal/5 p-4 mb-6 text-left space-y-2 text-sm text-ink-soft">
-        <p>✅ No coding required</p>
-        <p>✅ Connect your WhatsApp number</p>
-        <p>✅ AI replies 24/7</p>
-      </div>
-      <Button onClick={onNext} className="w-full" size="lg">
-        Start Setup →
-      </Button>
-    </div>
-  );
-}
-
-// ============================================
-// STEP 2: BUSINESS PROFILE
+// STEP 1: BUSINESS PROFILE (Previously Step 2)
 // ============================================
 const categories = ["Jewellery", "Fashion", "Electronics", "Food", "Handicrafts", "Other"];
 
-function Step2_BusinessProfile({ formData, updateFormData, onNext, onPrev }: any) {
+function Step1_BusinessProfile({ formData, updateFormData, onNext }: any) {
+  const [phoneError, setPhoneError] = useState("");
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate WhatsApp number format: +923001234567
+    const phoneRegex = /^\+92\d{10}$/;
+    if (!phoneRegex.test(formData.whatsappNumber)) {
+      setPhoneError("Please enter a valid WhatsApp number (e.g., +923001234567)");
+      return;
+    }
+
+    setPhoneError("");
     if (formData.businessName && formData.category && formData.whatsappNumber) {
       onNext();
     }
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">Business Profile 🏪</h2>
-      <p className="text-ink-soft mb-6">Tell us about your store so the AI understands your context.</p>
-      <form onSubmit={handleSubmit} className="space-y-5">
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-sm">
+      <h2 className="font-display text-xl font-bold text-ink mb-2">Business Profile 🏪</h2>
+      <p className="text-ink-soft mb-4 text-sm">Tell us about your store so the AI understands your context.</p>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <Label>Business Name *</Label>
           <Input
@@ -80,16 +65,14 @@ function Step2_BusinessProfile({ formData, updateFormData, onNext, onPrev }: any
           <Label>WhatsApp Business Number *</Label>
           <Input
             type="tel"
-            placeholder="e.g., +923001234567"
+            placeholder="+923001234567"
             value={formData.whatsappNumber}
             onChange={(e) => updateFormData("whatsappNumber", e.target.value)}
             required
           />
+          {phoneError && <p className="text-danger text-sm mt-1">{phoneError}</p>}
         </div>
-        <div className="flex justify-between mt-8 pt-4">
-          <Button type="button" variant="outline" onClick={onPrev}>
-            Back
-          </Button>
+        <div className="flex justify-end mt-6 pt-4">
           <Button type="submit">
             Continue →
           </Button>
@@ -100,17 +83,17 @@ function Step2_BusinessProfile({ formData, updateFormData, onNext, onPrev }: any
 }
 
 // ============================================
-// STEP 3: IMPORT CATALOGUE
+// STEP 2: IMPORT CATALOGUE
 // ============================================
-function Step3_ImportCatalogue({ onNext, onPrev }: any) {
+function Step2_ImportCatalogue({ onNext, onPrev }: any) {
   const [file, setFile] = useState<File | null>(null);
   const [method, setMethod] = useState<"upload" | "paste">("upload");
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">Import Catalogue 📦</h2>
-      <p className="text-ink-soft mb-6">How would you like to add your products?</p>
-      <div className="flex gap-4 mb-6">
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-sm">
+      <h2 className="font-display text-xl font-bold text-ink mb-2">Import Catalogue 📦</h2>
+      <p className="text-ink-soft mb-4 text-sm">How would you like to add your products?</p>
+      <div className="flex gap-4 mb-4">
         <button
           className={`px-4 py-2 rounded-lg border text-sm transition-colors ${method === "upload" ? "bg-teal-soft/20 border-teal text-teal-bright" : "border-line text-ink-soft hover:bg-paper"}`}
           onClick={() => setMethod("upload")}
@@ -125,7 +108,7 @@ function Step3_ImportCatalogue({ onNext, onPrev }: any) {
         </button>
       </div>
       {method === "upload" && (
-        <div className="border-2 border-dashed border-line rounded-lg p-8 text-center bg-paper/50">
+        <div className="border-2 border-dashed border-line rounded-lg p-5 text-center bg-paper/50">
           <input
             type="file"
             accept=".csv,.xlsx,.xls"
@@ -137,11 +120,11 @@ function Step3_ImportCatalogue({ onNext, onPrev }: any) {
       )}
       {method === "paste" && (
         <Textarea
-          className="w-full h-32"
+          className="w-full h-32 text-sm"
           placeholder="Product 1, Rs. 500, In Stock&#10;Product 2, Rs. 750, Out of Stock"
         />
       )}
-      <div className="flex justify-between mt-8 pt-4">
+      <div className="flex justify-between mt-6 pt-4">
         <Button type="button" variant="outline" onClick={onPrev}>
           Back
         </Button>
@@ -154,14 +137,14 @@ function Step3_ImportCatalogue({ onNext, onPrev }: any) {
 }
 
 // ============================================
-// STEP 4: STORE POLICIES
+// STEP 3: STORE POLICIES
 // ============================================
-function Step4_StorePolicies({ formData, updateFormData, onNext, onPrev }: any) {
+function Step3_StorePolicies({ formData, updateFormData, onNext, onPrev }: any) {
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">Store Policies 📋</h2>
-      <p className="text-ink-soft mb-6">Define your rules so the AI gives accurate answers.</p>
-      <div className="space-y-5">
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-sm">
+      <h2 className="font-display text-xl font-bold text-ink mb-2">Store Policies 📋</h2>
+      <p className="text-ink-soft mb-4 text-sm">Define your rules so the AI gives accurate answers.</p>
+      <div className="space-y-4">
         <div>
           <Label>Delivery Charges</Label>
           <Input
@@ -190,7 +173,7 @@ function Step4_StorePolicies({ formData, updateFormData, onNext, onPrev }: any) 
           />
         </div>
       </div>
-      <div className="flex justify-between mt-8 pt-4">
+      <div className="flex justify-between mt-6 pt-4">
         <Button type="button" variant="outline" onClick={onPrev}>
           Back
         </Button>
@@ -203,19 +186,19 @@ function Step4_StorePolicies({ formData, updateFormData, onNext, onPrev }: any) 
 }
 
 // ============================================
-// STEP 5: AI PERSONALITY
+// STEP 4: AI PERSONALITY
 // ============================================
 const tones = ["Professional", "Friendly", "Casual", "Formal"];
 const languages = ["Urdu + English", "Urdu", "English"];
 
-function Step5_AIPersonality({ formData, updateFormData, onNext, onPrev }: any) {
+function Step4_AIPersonality({ formData, updateFormData, onNext, onPrev }: any) {
   const preview = `"Ji bilkul! Pearl earrings are available for Rs. 1,200."`;
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">AI Agent Personality 🤖</h2>
-      <p className="text-ink-soft mb-6">How should your assistant sound?</p>
-      <div className="space-y-5">
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-sm">
+      <h2 className="font-display text-xl font-bold text-ink mb-2">AI Agent Personality 🤖</h2>
+      <p className="text-ink-soft mb-4 text-sm">How should your assistant sound?</p>
+      <div className="space-y-4">
         <div>
           <Label>Agent Name</Label>
           <Input
@@ -247,12 +230,12 @@ function Step5_AIPersonality({ formData, updateFormData, onNext, onPrev }: any) 
             ))}
           </Select>
         </div>
-        <div className="rounded-xl border border-line bg-paper p-4">
-          <p className="text-sm text-ink-soft mb-1">🔊 Preview</p>
-          <p className="text-ink font-medium">{preview}</p>
+        <div className="rounded-xl border border-line bg-paper p-3">
+          <p className="text-xs text-ink-soft mb-1">🔊 Preview</p>
+          <p className="text-sm text-ink font-medium">{preview}</p>
         </div>
       </div>
-      <div className="flex justify-between mt-8 pt-4">
+      <div className="flex justify-between mt-6 pt-4">
         <Button type="button" variant="outline" onClick={onPrev}>
           Back
         </Button>
@@ -265,17 +248,17 @@ function Step5_AIPersonality({ formData, updateFormData, onNext, onPrev }: any) 
 }
 
 // ============================================
-// STEP 6: CONNECT WHATSAPP
+// STEP 5: CONNECT WHATSAPP
 // ============================================
-function Step6_ConnectWhatsApp({ formData, onNext, onPrev }: any) {
+function Step5_ConnectWhatsApp({ formData, onNext, onPrev }: any) {
   const [connecting, setConnecting] = useState(false);
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 text-center shadow-sm">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">Connect WhatsApp 📱</h2>
-      <p className="text-ink-soft mb-6">Link your business number to start automating replies.</p>
-      <div className="rounded-xl border border-line bg-paper p-6 mb-6">
-        <p className="text-2xl font-bold text-ink">{formData.whatsappNumber || "+92 300 1234567"}</p>
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 text-center shadow-sm">
+      <h2 className="font-display text-xl font-bold text-ink mb-2">Connect WhatsApp 📱</h2>
+      <p className="text-ink-soft mb-4 text-sm">Link your business number to start automating replies.</p>
+      <div className="rounded-xl border border-line bg-paper p-4 mb-4">
+        <p className="text-xl font-bold text-ink">{formData.whatsappNumber || "+92 300 1234567"}</p>
       </div>
       <Button
         onClick={() => {
@@ -288,7 +271,7 @@ function Step6_ConnectWhatsApp({ formData, onNext, onPrev }: any) {
       >
         {connecting ? "Connecting..." : "Connect via Meta"}
       </Button>
-      <div className="flex justify-between mt-8 pt-4">
+      <div className="flex justify-between mt-6 pt-4">
         <Button type="button" variant="outline" onClick={onPrev}>
           Back
         </Button>
@@ -298,16 +281,17 @@ function Step6_ConnectWhatsApp({ formData, onNext, onPrev }: any) {
 }
 
 // ============================================
-// STEP 7: SUCCESS
+// STEP 6: SUCCESS
 // ============================================
-function Step7_Success({ user, formData, onComplete }: any) {
+function Step6_Success({ user, formData, onComplete }: any) {
   const [saving, setSaving] = useState(false);
 
   const handleFinish = async () => {
     setSaving(true);
+    console.log("[Onboarding] Step 6: Saving to Supabase...");
     try {
       const supabase = createClient();
-      await supabase
+      const { error } = await supabase
         .from("sellers")
         .update({
           business_name: formData.businessName,
@@ -321,28 +305,41 @@ function Step7_Success({ user, formData, onComplete }: any) {
           agent_language: formData.language,
           onboarded: true,
         })
-        .eq("id", user.id);
+        .eq("id", user?.id);
 
-      localStorage.setItem("onboardingData", JSON.stringify(formData));
-      localStorage.setItem(`onboarded_${user.id}`, "true");
-      localStorage.setItem("onboardingComplete", "true");
-
-      // Wait for localStorage to save
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      onComplete();
-
+      if (error) {
+        console.error("[Onboarding] Supabase update error:", error.message);
+      } else {
+        console.log("[Onboarding] Supabase save successful!");
+      }
     } catch (e) {
-      console.warn("Error:", e);
+      console.error("[Onboarding] Exception during Supabase save:", e);
     }
+
+    // Always attempt to redirect, even if Supabase saving failed
+    console.log("[Onboarding] Proceeding to redirect...");
+    try {
+      localStorage.setItem("onboardingData", JSON.stringify(formData));
+
+      if (onComplete) {
+        await onComplete();
+      } else {
+        // Backup direct redirect if onComplete is missing
+        console.log("[Onboarding] onComplete not found, forcing direct redirect");
+        if (typeof window !== "undefined") window.location.href = "/dashboard";
+      }
+    } catch (e) {
+      console.error("[Onboarding] Error during final redirect:", e);
+      if (typeof window !== "undefined") window.location.href = "/dashboard";
+    }
+
     setSaving(false);
   };
 
   return (
-    <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 text-center shadow-sm">
-      <div className="text-6xl mb-4">🎉</div>
-      <h2 className="font-display text-3xl font-bold text-ink mb-2">You're All Set!</h2>
-      <p className="text-ink-soft mb-6">Your AI support agent is ready to go.</p>
+    <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 text-center shadow-sm">
+      <h2 className="font-display text-2xl font-bold text-ink mb-2">You're All Set!</h2>
+      <p className="text-ink-soft mb-4 text-sm">Your AI support agent is ready to go.</p>
       <Button
         onClick={handleFinish}
         disabled={saving}
@@ -362,7 +359,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [step, setStep] = useState(1);
-  const totalSteps = 7;
+  const totalSteps = 6;
+
   const [formData, setFormData] = useState({
     businessName: "",
     category: "",
@@ -379,11 +377,25 @@ export default function OnboardingPage() {
     companySize: "",
   });
 
+  // 1. One-time Redirect to Dashboard if already onboarded
   useEffect(() => {
     if (!authLoading && user && user.onboarded) {
-      router.replace("/dashboard");
+      if (typeof window !== "undefined") {
+        window.location.replace("/dashboard");
+      }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading]);
+
+  // 2. Pre-fill businessName and phone from signup data
+  useEffect(() => {
+    if (user && !authLoading) {
+      setFormData((prev) => ({
+        ...prev,
+        businessName: prev.businessName || user.businessName || "",
+        whatsappNumber: prev.whatsappNumber || user.phone || "",
+      }));
+    }
+  }, [user, authLoading]);
 
   const updateFormData = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -391,8 +403,10 @@ export default function OnboardingPage() {
 
   const nextStep = () => { if (step < totalSteps) setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
   const prevStep = () => { if (step > 1) setStep(step - 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
+
   const handleComplete = async () => {
-    // Force onboarded flag in localStorage
+    console.log("[Onboarding] handleComplete triggered");
+
     if (user) {
       localStorage.setItem(`onboarded_${user.id}`, "true");
       localStorage.setItem("onboardingComplete", "true");
@@ -401,8 +415,20 @@ export default function OnboardingPage() {
     // Small delay to ensure localStorage is set
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Hard redirect to dashboard
-    window.location.href = "/dashboard";
+    console.log("[Onboarding] Attempting router.push('/dashboard')...");
+    try {
+      router.push("/dashboard");
+    } catch (e) {
+      console.warn("[Onboarding] router.push failed:", e);
+    }
+
+    // Fallback to window.location.href to guarantee redirect
+    setTimeout(() => {
+      if (typeof window !== "undefined" && window.location.pathname !== "/dashboard") {
+        console.log("[Onboarding] Fallback: Forcing window.location.href = '/dashboard'");
+        window.location.href = "/dashboard";
+      }
+    }, 300);
   };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center bg-paper text-ink-soft">Loading...</div>;
@@ -412,21 +438,25 @@ export default function OnboardingPage() {
     return null;
   }
 
+  // If already onboarded, we don't render the form again (prevents flashes before redirect)
+  if (user.onboarded) {
+    return <div className="min-h-screen flex items-center justify-center bg-paper text-ink-soft">Redirecting to dashboard...</div>;
+  }
+
   const renderStep = () => {
     switch (step) {
-      case 1: return <Step1_Welcome onNext={nextStep} />;
-      case 2: return <Step2_BusinessProfile formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
-      case 3: return <Step3_ImportCatalogue onNext={nextStep} onPrev={prevStep} />;
-      case 4: return <Step4_StorePolicies formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
-      case 5: return <Step5_AIPersonality formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
-      case 6: return <Step6_ConnectWhatsApp formData={formData} onNext={nextStep} onPrev={prevStep} />;
-      case 7: return <Step7_Success user={user} formData={formData} onComplete={handleComplete} />;
+      case 1: return <Step1_BusinessProfile formData={formData} updateFormData={updateFormData} onNext={nextStep} />;
+      case 2: return <Step2_ImportCatalogue onNext={nextStep} onPrev={prevStep} />;
+      case 3: return <Step3_StorePolicies formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
+      case 4: return <Step4_AIPersonality formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
+      case 5: return <Step5_ConnectWhatsApp formData={formData} onNext={nextStep} onPrev={prevStep} />;
+      case 6: return <Step6_Success user={user} formData={formData} onComplete={handleComplete} />;
       default: return null;
     }
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-16">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-12">
       {/* Decorative blurs */}
       <div
         aria-hidden
@@ -437,28 +467,28 @@ export default function OnboardingPage() {
         className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-marigold-soft blur-3xl opacity-60"
       />
 
-      <div className="relative z-10 w-full max-w-2xl space-y-8">
-        <div className="flex flex-col items-center gap-4">
+      <div className="relative z-10 w-full max-w-lg space-y-6">
+        <div className="flex flex-col items-center gap-3">
           <Link href="/" aria-label="Back to home">
             <Logo />
           </Link>
           <div className="text-center">
-            <h1 className="font-display text-3xl tracking-tight text-ink">
+            <h1 className="font-display text-2xl tracking-tight text-ink">
               Store Setup
             </h1>
-            <p className="mt-2 text-sm text-ink-soft">
+            <p className="mt-1 text-sm text-ink-soft">
               Complete these steps to set up your store.
             </p>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="rounded-[var(--radius-card)] border border-line bg-card p-6 shadow-sm">
-          <div className="flex justify-between text-sm text-ink-soft mb-3 font-medium">
+        <div className="rounded-[var(--radius-card)] border border-line bg-card p-4 shadow-sm">
+          <div className="flex justify-between text-xs text-ink-soft mb-2 font-medium">
             <span>Step {step} of {totalSteps}</span>
             <span>{Math.round((step / totalSteps) * 100)}%</span>
           </div>
-          <div className="w-full bg-paper rounded-full h-2.5 border border-line overflow-hidden">
+          <div className="w-full bg-paper rounded-full h-2 border border-line overflow-hidden">
             <div className="bg-teal h-full rounded-full transition-all duration-500" style={{ width: `${(step / totalSteps) * 100}%` }} />
           </div>
         </div>
