@@ -23,38 +23,50 @@ export default function SignupPage() {
         setLoading(true)
         setError('')
         const supabase = createClient()
+        
+        console.log('--- STARTING SIGNUP ---')
+        console.log('Attempting to create user:', email)
 
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    business_name: businessName,
-                    phone: phone,
-                },
-            },
-        })
-
-        if (error) {
-            setError(error.message)
-        } else {
-            // Insert into sellers table
-            if (data.user) {
-                const { error: insertError } = await supabase
-                    .from('sellers')
-                    .insert({
-                        id: data.user.id,
-                        email: email,
+        try {
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
                         business_name: businessName,
                         phone: phone,
-                    })
-                if (insertError) {
-                    console.error('Error creating seller:', insertError)
+                    },
+                },
+            })
+
+            console.log('RAW SUPABASE RESPONSE:', { data, error })
+
+            if (error) {
+                console.error('Supabase auth.signUp returned an error object:', error)
+                console.error('Error status:', error.status)
+                console.error('Error name:', error.name)
+                setError(`Signup failed [${error.status}]: ${error.message}`)
+            } else {
+                console.log('Signup success! User data:', data.user)
+                console.log('Session data:', data.session)
+
+                if (data.session) {
+                    console.log('Redirecting to dashboard...')
+                    router.push('/dashboard')
+                } else {
+                    console.log('No session returned. Email confirmation required.')
+                    setError('Signup successful! Please check your email to confirm your account.')
                 }
             }
-            router.push('/dashboard')
+        } catch (err) {
+            // This catches network failures or thrown exceptions (like 500s that crash the fetch)
+            console.error('CRITICAL UNEXPECTED ERROR during signUp:', err)
+            // @ts-ignore
+            setError(`Unexpected Error: ${err?.message || JSON.stringify(err)}`)
+        } finally {
+            console.log('--- SIGNUP ATTEMPT FINISHED ---')
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     return (

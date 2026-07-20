@@ -88,7 +88,7 @@ function toAuthUser(
       (typeof window !== "undefined" ? window.localStorage.getItem(`company_size_${authUser.id}`) : null) ??
       "",
     onboarded:
-      (seller?.onboarded as boolean) ??
+      (seller?.onboarded as boolean) ||
       (typeof window !== "undefined" ? window.localStorage.getItem(`onboarded_${authUser.id}`) === "true" : false),
   };
 }
