@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
 
-type SubTab = "tasks" | "knowledge" | "tone" | "tools" | "whatsapp";
+type SubTab = "onboarding" | "tasks" | "knowledge" | "tone" | "tools" | "whatsapp";
 
 interface KnowledgeItem {
   id: string;
@@ -33,8 +33,12 @@ const tryParseSpreadsheet = (content: string) => {
 
 export default function SetupPage() {
   const { user, loading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState<SubTab>("tasks");
+  const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<SubTab>("onboarding");
   const [initialized, setInitialized] = useState(false);
+  const [onboardingData, setOnboardingData] = useState<any>(null);
+  const [savingOnboarding, setSavingOnboarding] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   // Setup — Tasks & Rules States
   const [agentPrompt, setAgentPrompt] = useState(
@@ -58,6 +62,11 @@ export default function SetupPage() {
   const [inspectContent, setInspectContent] = useState("");
   const [spreadsheetData, setSpreadsheetData] = useState<{ headers: string[]; rows: Record<string, string>[]; fileName?: string } | null>(null);
   const [gridSearchQuery, setGridSearchQuery] = useState("");
+  
+  // Delete Modal states
+  const [itemToDelete, setItemToDelete] = useState<KnowledgeItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedKnowledgeId, setSelectedKnowledgeId] = useState<string | null>(null);
 
   // Knowledge form states
   const [newUrl, setNewUrl] = useState("");
@@ -108,44 +117,104 @@ export default function SetupPage() {
     }
   }, [user, initialized]);
 
-  // Load setup values from localStorage fallback when user is ready
+  // Fetch setup values from Supabase tables
   useEffect(() => {
-    if (user) {
-      const cachedPrompt = window.localStorage.getItem(`agentPrompt_${user.id}`);
-      if (cachedPrompt) setAgentPrompt(cachedPrompt);
-
-      const cachedNever = window.localStorage.getItem(`agentNeverDo_${user.id}`);
-      if (cachedNever) setAgentNeverDo(cachedNever);
-
-      const cachedMemory = window.localStorage.getItem(`agentMemory_${user.id}`);
-      if (cachedMemory) setAgentMemory(cachedMemory);
-
-      const cachedKnowledge = window.localStorage.getItem(`knowledgeList_${user.id}`);
-      if (cachedKnowledge) {
-        try {
-          setKnowledgeList(JSON.parse(cachedKnowledge));
-        } catch {}
+    async function loadData() {
+      if (!user) {
+        setDataLoading(false);
+        return;
       }
 
-      const cachedTone = window.localStorage.getItem(`toneGuidelines_${user.id}`);
-      if (cachedTone) {
-        try {
-          setToneGuidelines(JSON.parse(cachedTone));
-        } catch {}
+      setDataLoading(true);
+      const supabase = createClient();
+
+      try {
+        const [sellerRes, configRes, productsRes] = await Promise.all([
+          supabase.from("sellers").select("*").eq("id", user.id).single(),
+          supabase.from("agent_configs").select("*").eq("seller_id", user.id).maybeSingle(),
+          supabase.from("products").select("*").eq("seller_id", user.id),
+        ]);
+
+        if (sellerRes.data) {
+          const s = sellerRes.data;
+          if (s.phone) setWhatsappNumber(s.phone);
+          if (s.whatsapp_requested !== undefined) setWhatsappRequested(s.whatsapp_requested);
+          
+          setOnboardingData({
+            businessName: s.business_name || "",
+            category: s.category || "",
+            whatsappNumber: s.phone || "",
+            deliveryCharges: s.delivery_charges || "",
+            deliveryTime: s.delivery_time || "",
+            returnPolicy: s.return_policy || "",
+            agentName: s.agent_name || "",
+            aiTone: s.agent_tone || "",
+            aiLanguage: s.agent_language || "",
+          });
+        }
+
+        let currentKnowledgeList: KnowledgeItem[] = [];
+
+        if (configRes.data) {
+          const config = configRes.data;
+          if (config.agent_prompt) setAgentPrompt(config.agent_prompt);
+          if (config.agent_never_do) setAgentNeverDo(config.agent_never_do);
+          if (config.agent_memory) setAgentMemory(config.agent_memory);
+          if (config.knowledge_items && Array.isArray(config.knowledge_items)) {
+            currentKnowledgeList = config.knowledge_items as KnowledgeItem[];
+          }
+          if (config.tone_guidelines && Array.isArray(config.tone_guidelines)) {
+            setToneGuidelines(config.tone_guidelines as string[]);
+          }
+          if (config.conciseness) setConciseness(config.conciseness);
+          if (config.hinglish_support !== null) setHinglishSupport(config.hinglish_support);
+        } else {
+          // Fallback to local storage if config not found in DB
+          const cachedPrompt = window.localStorage.getItem(`agentPrompt_${user.id}`);
+          if (cachedPrompt) setAgentPrompt(cachedPrompt);
+          const cachedKnowledge = window.localStorage.getItem(`knowledgeList_${user.id}`);
+          if (cachedKnowledge) {
+            try {
+              currentKnowledgeList = JSON.parse(cachedKnowledge);
+            } catch {}
+          }
+        }
+
+        // Auto-populate products table as a knowledge item if products exist
+        if (productsRes.data && productsRes.data.length > 0) {
+          const rows = productsRes.data;
+          const productItem: KnowledgeItem = {
+            id: `k_products_table`,
+            type: "document",
+            name: `Supabase Products Table (${rows.length} items)`,
+            content: JSON.stringify({
+              headers: ["id", "name", "category", "price", "availability_status", "description"],
+              rows: rows.map((r: any) => ({
+                id: String(r.id),
+                name: String(r.name || ""),
+                category: String(r.category || ""),
+                price: String(r.price || ""),
+                availability_status: String(r.availability_status || ""),
+                description: String(r.description || ""),
+              })),
+            }),
+          };
+          
+          // Prepend to list, overriding any old version of it
+          const existing = currentKnowledgeList.filter((k) => k.id !== "k_products_table");
+          currentKnowledgeList = [productItem, ...existing];
+        }
+
+        setKnowledgeList(currentKnowledgeList);
+
+      } catch (err) {
+        console.error("Failed to load onboarding data:", err);
+      } finally {
+        setDataLoading(false);
       }
-
-      const cachedConcise = window.localStorage.getItem(`conciseness_${user.id}`);
-      if (cachedConcise) setConciseness(cachedConcise);
-
-      const cachedHinglish = window.localStorage.getItem(`hinglishSupport_${user.id}`);
-      if (cachedHinglish) setHinglishSupport(cachedHinglish === "true");
-
-      const cachedShopify = window.localStorage.getItem(`shopifyConnected_${user.id}`);
-      if (cachedShopify) setShopifyConnected(cachedShopify === "true");
-
-      const cachedCOD = window.localStorage.getItem(`codAutoConfirm_${user.id}`);
-      if (cachedCOD) setCodAutoConfirm(cachedCOD === "true");
     }
+
+    loadData();
   }, [user]);
 
   // Save values to localStorage fallbacks on changes
@@ -237,6 +306,37 @@ export default function SetupPage() {
     setAgentMemory(
       `We are ${user?.businessName || "Meher Handmade"}, a Pakistan-based social commerce brand. We specialize in handcrafted premium jewellery. Our primary audience is on WhatsApp and Instagram.`
     );
+  };
+
+  const handleSaveOnboarding = async () => {
+    if (!user || !onboardingData) return;
+    setSavingOnboarding(true);
+    setSaveSuccess(false);
+
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("sellers")
+        .update({
+          business_name: onboardingData.businessName,
+          category: onboardingData.category,
+          phone: onboardingData.whatsappNumber,
+          delivery_charges: onboardingData.deliveryCharges,
+          delivery_time: onboardingData.deliveryTime,
+          return_policy: onboardingData.returnPolicy,
+          agent_name: onboardingData.agentName,
+          agent_tone: onboardingData.aiTone,
+          agent_language: onboardingData.aiLanguage,
+        })
+        .eq("id", user.id);
+
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      console.error("Failed to update onboarding data", err);
+    } finally {
+      setSavingOnboarding(false);
+    }
   };
 
   const handleAddWebsite = () => {
@@ -332,6 +432,41 @@ export default function SetupPage() {
           console.error("Error parsing CSV:", err);
         }
       });
+    }
+  };
+
+  const confirmDeleteKnowledge = async () => {
+    if (!itemToDelete || !user) return;
+    setIsDeleting(true);
+    const item = itemToDelete;
+    
+    try {
+      const supabase = createClient();
+      
+      if (item.id === "k_products_table") {
+        // Delete all products for this seller
+        await supabase.from("products").delete().eq("seller_id", user.id);
+        
+        // Remove from UI list
+        setKnowledgeList(prev => prev.filter(i => i.id !== item.id));
+        setSelectedKnowledgeId(null);
+      } else {
+        // Remove from UI list
+        const newList = knowledgeList.filter(i => i.id !== item.id);
+        setKnowledgeList(newList);
+        setSelectedKnowledgeId(null);
+        
+        // Update agent_configs in DB
+        const knowledgeToSave = newList.filter(i => i.id !== "k_products_table");
+        await supabase.from("agent_configs").update({
+          knowledge_items: knowledgeToSave
+        }).eq("seller_id", user.id);
+      }
+    } catch (err) {
+      console.error("Failed to delete knowledge item", err);
+    } finally {
+      setIsDeleting(false);
+      setItemToDelete(null);
     }
   };
 
@@ -501,7 +636,7 @@ export default function SetupPage() {
     setBotTyping(false);
   };
 
-  if (authLoading) {
+  if (authLoading || dataLoading) {
     return (
       <div className="grid min-h-screen place-items-center bg-paper">
         <p className="font-mono text-sm text-ink-soft">Loading AI Builder Dashboard…</p>
@@ -532,6 +667,7 @@ export default function SetupPage() {
               <nav className="mt-1.5 flex flex-col gap-1">
                 {(
                   [
+                    ["onboarding", "Onboarding Profile", "👤"],
                     ["tasks", "Tasks & Rules", "📋"],
                     ["knowledge", "Knowledge & Data", "📂"],
                     ["tone", "Tone & Voice", "🗣️"],
@@ -590,6 +726,132 @@ export default function SetupPage() {
 
       {/* 2. Main Configuration Pane */}
       <main className="overflow-y-auto bg-paper px-6 py-6 border-r border-line">
+        {activeTab === "onboarding" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="font-display text-2xl tracking-tight text-ink">Onboarding Data</h2>
+              <p className="text-sm text-ink-soft mt-1">
+                Data collected during your initial onboarding setup. Edit below to keep your profile updated.
+              </p>
+            </div>
+
+            <Card>
+              <CardBody className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <Label htmlFor="ob-business-name">Business Name</Label>
+                    <Input
+                      id="ob-business-name"
+                      value={onboardingData?.businessName || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, businessName: e.target.value })}
+                      placeholder="e.g. Glam Jewellery"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-category">Category</Label>
+                    <Select
+                      id="ob-category"
+                      value={onboardingData?.category || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, category: e.target.value })}
+                    >
+                      <option value="">Select Category...</option>
+                      <option value="Jewellery">Jewellery</option>
+                      <option value="Fashion">Fashion</option>
+                      <option value="Electronics">Electronics</option>
+                      <option value="Food">Food</option>
+                      <option value="Handicrafts">Handicrafts</option>
+                      <option value="Other">Other</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-whatsapp">WhatsApp Number</Label>
+                    <Input
+                      id="ob-whatsapp"
+                      value={onboardingData?.whatsappNumber || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, whatsappNumber: e.target.value })}
+                      placeholder="+92 300 1234567"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-agent-name">Agent Name</Label>
+                    <Input
+                      id="ob-agent-name"
+                      value={onboardingData?.agentName || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, agentName: e.target.value })}
+                      placeholder="e.g. Sara"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-delivery-charges">Delivery Charges</Label>
+                    <Input
+                      id="ob-delivery-charges"
+                      value={onboardingData?.deliveryCharges || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryCharges: e.target.value })}
+                      placeholder="e.g. Rs. 150"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-delivery-time">Delivery Time</Label>
+                    <Input
+                      id="ob-delivery-time"
+                      value={onboardingData?.deliveryTime || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryTime: e.target.value })}
+                      placeholder="e.g. 2-3 Days"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="ob-return-policy">Return Policy</Label>
+                    <Input
+                      id="ob-return-policy"
+                      value={onboardingData?.returnPolicy || ""}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, returnPolicy: e.target.value })}
+                      placeholder="e.g. 7 days return..."
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-ai-tone">AI Tone</Label>
+                    <Select
+                      id="ob-ai-tone"
+                      value={onboardingData?.aiTone || "friendly"}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, aiTone: e.target.value })}
+                    >
+                      <option value="professional">Professional</option>
+                      <option value="friendly">Friendly</option>
+                      <option value="casual">Casual</option>
+                      <option value="formal">Formal</option>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="ob-ai-language">AI Language</Label>
+                    <Select
+                      id="ob-ai-language"
+                      value={onboardingData?.aiLanguage || "urdu-english"}
+                      onChange={(e) => setOnboardingData({ ...onboardingData, aiLanguage: e.target.value })}
+                    >
+                      <option value="urdu-english">Urdu + English</option>
+                      <option value="urdu">Urdu</option>
+                      <option value="english">English</option>
+                    </Select>
+                  </div>
+                </div>
+                
+                <div className="mt-8 flex items-center gap-4 justify-end border-t border-line pt-4">
+                  {saveSuccess && (
+                    <span className="text-sm font-medium text-success">✅ Saved successfully!</span>
+                  )}
+                  <Button 
+                    onClick={handleSaveOnboarding} 
+                    disabled={savingOnboarding}
+                    className="bg-teal hover:bg-teal-bright text-paper"
+                  >
+                    {savingOnboarding ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        )}
+
         {activeTab === "tasks" && (
           <div className="space-y-6">
             <div>
@@ -727,37 +989,65 @@ export default function SetupPage() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {knowledgeList.map((item) => (
-                  <Card key={item.id}>
-                    <CardBody className="flex items-center justify-between p-4">
+              <Card className="overflow-hidden flex flex-col">
+                <div className="max-h-48 overflow-hidden flex flex-col divide-y divide-line">
+                  {knowledgeList.slice(0, 3).map((item) => (
+                    <div 
+                      key={item.id} 
+                      onClick={() => setSelectedKnowledgeId(item.id)}
+                      className={cn(
+                        "flex flex-col p-4 cursor-pointer transition-colors border-l-4",
+                        selectedKnowledgeId === item.id || (!selectedKnowledgeId && knowledgeList[0].id === item.id)
+                          ? "bg-teal-soft/20 border-teal"
+                          : "bg-card border-transparent hover:bg-paper-deep"
+                      )}
+                    >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">
                           {item.type === "website" ? "🌐" : item.type === "document" ? "📄" : "❓"}
                         </span>
-                        <div>
+                        <div className="flex-1">
                           <p className="text-sm font-semibold text-ink">{item.name}</p>
                           <p className="text-xs text-ink-soft line-clamp-1">{item.content}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <button
-                          onClick={() => handleOpenInspectModal(item)}
-                          className="text-xs text-teal hover:underline font-semibold"
-                        >
-                          View & Edit
-                        </button>
-                        <button
-                          onClick={() => setKnowledgeList((prev) => prev.filter((i) => i.id !== item.id))}
-                          className="text-xs text-danger hover:underline font-semibold"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </CardBody>
-                  </Card>
-                ))}
-              </div>
+                    </div>
+                  ))}
+                  {knowledgeList.length > 3 && (
+                    <div className="p-3 text-center text-xs text-teal font-medium bg-paper-deep hover:bg-paper cursor-pointer transition-colors">
+                      View all {knowledgeList.length} files →
+                    </div>
+                  )}
+                </div>
+                <div className="bg-paper-deep border-t border-line p-3 flex justify-end gap-3 items-center">
+                  <span className="text-[10px] text-ink-faint mr-auto uppercase tracking-wider font-semibold">
+                    Select a file to manage
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!selectedKnowledgeId && knowledgeList.length === 0}
+                    onClick={() => {
+                      const selected = knowledgeList.find(i => i.id === (selectedKnowledgeId || knowledgeList[0].id));
+                      if (selected) handleOpenInspectModal(selected);
+                    }}
+                  >
+                    View & Edit
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!selectedKnowledgeId && knowledgeList.length === 0}
+                    onClick={() => {
+                      const selected = knowledgeList.find(i => i.id === (selectedKnowledgeId || knowledgeList[0].id));
+                      if (selected) setItemToDelete(selected);
+                    }}
+                    className="border-danger/30 text-danger hover:bg-danger/10"
+                  >
+                    <span>🗑️</span> Remove
+                  </Button>
+                </div>
+              </Card>
             )}
 
             {inspectingItem && (
@@ -1275,6 +1565,30 @@ export default function SetupPage() {
           </button>
         </div>
       </aside>
+
+      {/* Confirmation Modal for Delete */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-card rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 border border-line">
+            <h3 className="text-lg font-bold text-ink mb-2">Delete File</h3>
+            <p className="text-sm text-ink-soft mb-6">
+              Are you sure you want to delete <span className="font-semibold text-ink">{itemToDelete.name}</span>? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setItemToDelete(null)} disabled={isDeleting}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={confirmDeleteKnowledge} 
+                disabled={isDeleting}
+                className="bg-danger hover:bg-danger/90 text-white"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
