@@ -64,8 +64,21 @@ function scoreText(text: string, query: string, tokens: string[], exactMatchTarg
   if (exactMatchTarget) {
     const queryClean = normalizeForMatch(query);
     const targetClean = normalizeForMatch(exactMatchTarget);
+    
     if (targetClean.length > 2 && queryClean.includes(targetClean)) {
-      score += 100; // Massive boost for exact product name matches, ignoring punctuation/spaces
+      score += 100; // Massive boost for exact product name matches
+    } else if (queryClean.length > 3 && targetClean.includes(queryClean)) {
+      score += 50; // Boost if the query is a substring of the product name
+    }
+    
+    // Check token overlap specifically for the product name
+    const targetTokens = tokenize(exactMatchTarget);
+    let matchedTokens = 0;
+    for (const t of tokens) {
+      if (targetTokens.includes(t)) matchedTokens++;
+    }
+    if (matchedTokens > 0) {
+      score += matchedTokens * 20; // Big boost per word matched in the title
     }
   }
 
@@ -152,15 +165,18 @@ export function findApprovedFacts({
   console.log(`[DEBUG Grounding] Tokens extracted:`, tokens);
   console.log(`[DEBUG Grounding] Pre-filtered Products available: ${products.length}`);
 
-  if (greeting) {
-    facts.push({
-      id: "seller:identity",
-      text: `Business name: ${seller.business_name || "the seller's store"}${
-        seller.industry ? ` | Industry: ${seller.industry}` : ""
-      }`,
-      score: 50,
-    });
-  }
+  // Always include seller identity and policies (onboarding data)
+  const sellerText = [
+    `Business name: ${seller.business_name || "the seller's store"}`,
+    seller.industry ? `Industry: ${seller.industry}` : "",
+    (seller as any).policies ? `Policies (Delivery/Returns/Hours): ${(seller as any).policies}` : ""
+  ].filter(Boolean).join(" | ");
+
+  facts.push({
+    id: "seller:identity",
+    text: sellerText,
+    score: greeting ? 50 : 20, // Baseline score ensures onboarding info is available
+  });
 
   products.forEach((product, index) => {
     const searchable = [
@@ -202,14 +218,11 @@ export function findApprovedFacts({
   }
 
   if (config.agent_memory) {
-    const score = scoreText(config.agent_memory, message, tokens);
-    if (score > 0 || greeting) {
-      facts.push({
-        id: "seller:memory",
-        text: cleanSnippet(config.agent_memory),
-        score: Math.max(score, greeting ? 10 : 0),
-      });
-    }
+    facts.push({
+      id: "seller:memory",
+      text: cleanSnippet(config.agent_memory),
+      score: greeting ? 50 : 20, // Baseline score ensures AI agent setup data is always available
+    });
   }
 
   return facts

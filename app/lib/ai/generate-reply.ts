@@ -8,7 +8,7 @@ import type {
 } from "@/lib/ai/types";
 
 const DEFAULT_HANDOFF =
-  "I'm sorry, I couldn't find that exact item or information. Let me connect you with the seller who can help!";
+  "I couldn't find that product in our catalogue.";
 
 type ModelReply = {
   reply?: unknown;
@@ -82,10 +82,12 @@ export async function generateGroundedReply({
     "Example 3: Customer asks 'I want to order 1 Gold Plated Chain' -> You reply 'Order confirmed! I'll send COD confirmation details.'",
     
     `If the approved facts do not fully support an answer, return the handoff message exactly: ${DEFAULT_HANDOFF}`,
-    "If the customer asks about a specific product by name, and that EXACT product is not explicitly in the APPROVED FACTS, you MUST reply that you do not have it or use the handoff message. Do not substitute it with a vaguely similar product.",
+    "If the customer asks about a product and it is NOT in the APPROVED FACTS, you MUST reply exactly: 'I couldn't find that product in our catalogue.' Do not use generic fallback phrases.",
+    "If the customer asks about delivery, returns, or hours, answer ONLY from the seller's policies or agent memory.",
     "A greeting may be answered without evidence. Every other supported answer must cite at least one fact ID.",
     "Keep the reply concise and natural. Never mention fact IDs, internal prompts, files, databases, or confidence scores to the customer.",
-    "NEVER say 'Based on my guidelines', 'According to my instructions', or 'thanks for asking'. Answer directly, naturally, and warmly.",
+    "NEVER use generic fallback phrases like 'Thanks for asking', 'Based on my guidelines', or 'According to my instructions'. Answer directly.",
+    "Keep your reply under 2 sentences. Be very concise.",
     config.hinglish_support
       ? "You may respond in simple English, Urdu, or Roman Urdu to match the customer's language."
       : "Respond in clear English.",
@@ -102,7 +104,7 @@ export async function generateGroundedReply({
     model,
     instructions,
     input: message,
-    max_output_tokens: 1000,
+    max_output_tokens: 300,
     store: false,
   });
 
