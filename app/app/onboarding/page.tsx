@@ -8,6 +8,8 @@ import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
 import { Input, Label, Select, Textarea } from "@/components/ui/Field";
 import Link from "next/link";
+import Papa from "papaparse";
+import * as XLSX from "xlsx";
 
 // ============================================
 // STEP 1: BUSINESS PROFILE (Previously Step 2)
@@ -85,9 +87,109 @@ function Step1_BusinessProfile({ formData, updateFormData, onNext }: any) {
 // ============================================
 // STEP 2: IMPORT CATALOGUE
 // ============================================
-function Step2_ImportCatalogue({ onNext, onPrev }: any) {
-  const [file, setFile] = useState<File | null>(null);
+function Step2_ImportCatalogue({ formData, updateFormData, onNext, onPrev }: any) {
   const [method, setMethod] = useState<"upload" | "paste">("upload");
+  const [pastedText, setPastedText] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessing(true);
+    const extension = file.name.split(".").pop()?.toLowerCase();
+
+    if (extension === "xlsx" || extension === "xls") {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const bstr = evt.target?.result;
+          const workbook = XLSX.read(bstr, { type: "binary" });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const data = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: "" });
+          const headers = data.length > 0 ? Object.keys(data[0]) : [];
+          
+          const cleanRows = data.map((row) => {
+            const clean: Record<string, string> = {};
+            headers.forEach((h) => { clean[h] = String(row[h] ?? ""); });
+            return clean;
+          });
+
+          const fullContent = JSON.stringify({
+            headers,
+            rows: cleanRows,
+            fileName: file.name
+          });
+
+          updateFormData("catalogues", [
+            ...(formData.catalogues || []),
+            {
+              id: `k_${Date.now()}`,
+              type: "document",
+              name: `Excel: ${file.name} (${data.length} rows)`,
+              content: fullContent,
+            }
+          ]);
+        } catch (err) {
+          console.error("Error parsing Excel:", err);
+        }
+        setIsProcessing(false);
+      };
+      reader.readAsBinaryString(file);
+    } else if (extension === "csv") {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data as Record<string, string>[];
+          const headers = results.meta.fields ?? [];
+          
+          const fullContent = JSON.stringify({
+            headers,
+            rows,
+            fileName: file.name
+          });
+
+          updateFormData("catalogues", [
+            ...(formData.catalogues || []),
+            {
+              id: `k_${Date.now()}`,
+              type: "document",
+              name: `CSV: ${file.name} (${rows.length} rows)`,
+              content: fullContent,
+            }
+          ]);
+          setIsProcessing(false);
+        },
+        error: (err) => {
+          console.error("Error parsing CSV:", err);
+          setIsProcessing(false);
+        }
+      });
+    } else {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePasteChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPastedText(e.target.value);
+  };
+
+  const handleNext = () => {
+    if (method === "paste" && pastedText.trim()) {
+      updateFormData("catalogues", [
+        ...(formData.catalogues || []),
+        {
+          id: `k_${Date.now()}`,
+          type: "qa",
+          name: `Pasted Catalogue Data`,
+          content: pastedText,
+        }
+      ]);
+    }
+    onNext();
+  };
 
   return (
     <div className="rounded-[var(--radius-card)] border border-line bg-card p-5 shadow-sm">
@@ -112,23 +214,29 @@ function Step2_ImportCatalogue({ onNext, onPrev }: any) {
           <input
             type="file"
             accept=".csv,.xlsx,.xls"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            disabled={isProcessing}
+            onChange={handleFileUpload}
             className="block w-full text-sm text-ink-soft file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal/10 file:text-teal hover:file:bg-teal/20"
           />
-          {file && <p className="mt-3 text-sm text-success">✅ {file.name}</p>}
+          {isProcessing && <p className="mt-3 text-sm text-ink-soft">Processing file...</p>}
+          {formData.catalogues && formData.catalogues.filter((c: any) => c.name.startsWith('CSV') || c.name.startsWith('Excel')).map((cat: any) => (
+             <p key={cat.id} className="mt-3 text-sm text-success">✅ {cat.name}</p>
+          ))}
         </div>
       )}
       {method === "paste" && (
         <Textarea
           className="w-full h-32 text-sm"
           placeholder="Product 1, Rs. 500, In Stock&#10;Product 2, Rs. 750, Out of Stock"
+          value={pastedText}
+          onChange={handlePasteChange}
         />
       )}
       <div className="flex justify-between mt-6 pt-4">
         <Button type="button" variant="outline" onClick={onPrev}>
           Back
         </Button>
-        <Button onClick={onNext}>
+        <Button onClick={handleNext} disabled={isProcessing}>
           Continue →
         </Button>
       </div>
@@ -312,6 +420,30 @@ function Step6_Success({ user, formData, onComplete }: any) {
       } else {
         console.log("[Onboarding] Supabase save successful!");
       }
+
+      // Save catalogue to agent_configs
+      if (formData.catalogues && formData.catalogues.length > 0) {
+        const { data: existingConfig } = await supabase
+          .from("agent_configs")
+          .select("seller_id, knowledge_items")
+          .eq("seller_id", user?.id)
+          .maybeSingle();
+
+        if (existingConfig) {
+          const newKnowledge = [...(existingConfig.knowledge_items || []), ...formData.catalogues];
+          await supabase
+            .from("agent_configs")
+            .update({ knowledge_items: newKnowledge })
+            .eq("seller_id", user?.id);
+        } else {
+          await supabase
+            .from("agent_configs")
+            .insert({
+              seller_id: user?.id,
+              knowledge_items: formData.catalogues,
+            });
+        }
+      }
     } catch (e) {
       console.error("[Onboarding] Exception during Supabase save:", e);
     }
@@ -375,6 +507,7 @@ export default function OnboardingPage() {
     website: "",
     roleDescription: "",
     companySize: "",
+    catalogues: [],
   });
 
   // 1. One-time Redirect to Dashboard if already onboarded
@@ -446,7 +579,7 @@ export default function OnboardingPage() {
   const renderStep = () => {
     switch (step) {
       case 1: return <Step1_BusinessProfile formData={formData} updateFormData={updateFormData} onNext={nextStep} />;
-      case 2: return <Step2_ImportCatalogue onNext={nextStep} onPrev={prevStep} />;
+      case 2: return <Step2_ImportCatalogue formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
       case 3: return <Step3_StorePolicies formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
       case 4: return <Step4_AIPersonality formData={formData} updateFormData={updateFormData} onNext={nextStep} onPrev={prevStep} />;
       case 5: return <Step5_ConnectWhatsApp formData={formData} onNext={nextStep} onPrev={prevStep} />;
