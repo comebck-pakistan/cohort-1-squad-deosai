@@ -42,8 +42,25 @@ export type ApprovedFact = {
   score: number;
 };
 
+export type ChatMessage = {
+  role: "user" | "assistant" | "system";
+  content: string;
+};
+
+export type TokenUsageLog = {
+  sellerId: string;
+  provider: "openai" | "vertex";
+  promptTokens: number;
+  cachedTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  cacheHitRate: string; // e.g. "85.5%"
+};
+
 export type GroundedReply = {
   reply: string;
   action: ReplyAction;
   evidenceIds: string[];
+  tokenUsage?: TokenUsageLog;
 };
+

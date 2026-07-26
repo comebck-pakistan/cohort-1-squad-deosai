@@ -135,24 +135,6 @@ export default function SetupPage() {
           supabase.from("products").select("*").eq("seller_id", user.id),
         ]);
 
-        if (sellerRes.data) {
-          const s = sellerRes.data;
-          if (s.phone) setWhatsappNumber(s.phone);
-          if (s.whatsapp_requested !== undefined) setWhatsappRequested(s.whatsapp_requested);
-          
-          setOnboardingData({
-            businessName: s.business_name || "",
-            category: s.category || "",
-            whatsappNumber: s.phone || "",
-            deliveryCharges: s.delivery_charges || "",
-            deliveryTime: s.delivery_time || "",
-            returnPolicy: s.return_policy || "",
-            agentName: s.agent_name || "",
-            aiTone: s.agent_tone || "",
-            aiLanguage: s.agent_language || "",
-          });
-        }
-
         let currentKnowledgeList: KnowledgeItem[] = [];
 
         if (configRes.data) {
@@ -180,6 +162,39 @@ export default function SetupPage() {
           }
         }
 
+        // Parse Onboarding Profile from localStorage & knowledge_items
+        const cachedOb = window.localStorage.getItem(`onboardingData_${user.id}`);
+        let parsedOb: Record<string, string> = {};
+        if (cachedOb) {
+          try { parsedOb = JSON.parse(cachedOb); } catch {}
+        }
+
+        const obItem = currentKnowledgeList.find((k) => k.id === "k_onboarding_profile");
+        if (obItem) {
+          try {
+            const obFromKnowledge = JSON.parse(obItem.content);
+            parsedOb = { ...obFromKnowledge, ...parsedOb };
+          } catch {}
+        }
+
+        if (sellerRes.data) {
+          const s = sellerRes.data;
+          if (s.phone) setWhatsappNumber(s.phone);
+          if (s.whatsapp_requested !== undefined) setWhatsappRequested(s.whatsapp_requested);
+
+          setOnboardingData({
+            businessName: s.business_name || parsedOb.businessName || "",
+            category: s.industry || parsedOb.category || "",
+            whatsappNumber: s.phone || parsedOb.whatsappNumber || "",
+            deliveryCharges: parsedOb.deliveryCharges || "",
+            deliveryTime: parsedOb.deliveryTime || "",
+            returnPolicy: parsedOb.returnPolicy || "",
+            agentName: parsedOb.agentName || "",
+            aiTone: parsedOb.aiTone || "friendly",
+            aiLanguage: parsedOb.aiLanguage || "urdu-english",
+          });
+        }
+
         // Auto-populate products table as a knowledge item if products exist
         if (productsRes.data && productsRes.data.length > 0) {
           const rows = productsRes.data;
@@ -199,7 +214,7 @@ export default function SetupPage() {
               })),
             }),
           };
-          
+
           // Prepend to list, overriding any old version of it
           const existing = currentKnowledgeList.filter((k) => k.id !== "k_products_table");
           currentKnowledgeList = [productItem, ...existing];
@@ -214,8 +229,50 @@ export default function SetupPage() {
       }
     }
 
+
     loadData();
   }, [user]);
+
+  const [savingConfig, setSavingConfig] = useState(false);
+  const [configSaveSuccess, setConfigSaveSuccess] = useState(false);
+
+  const saveConfigToSupabase = async (
+    overrideList?: KnowledgeItem[],
+    overrideTone?: string[],
+    promptOverride?: string,
+    neverDoOverride?: string,
+    memoryOverride?: string
+  ) => {
+    if (!user) return;
+    setSavingConfig(true);
+    try {
+      const supabase = createClient();
+      const listToSave = (overrideList || knowledgeList).filter((k) => k.id !== "k_products_table");
+      const payload = {
+        seller_id: user.id,
+        agent_prompt: promptOverride !== undefined ? promptOverride : agentPrompt,
+        agent_never_do: neverDoOverride !== undefined ? neverDoOverride : agentNeverDo,
+        agent_memory: memoryOverride !== undefined ? memoryOverride : agentMemory,
+        knowledge_items: listToSave,
+        tone_guidelines: overrideTone || toneGuidelines,
+        conciseness,
+        hinglish_support: hinglishSupport,
+        shopify_connected: shopifyConnected,
+        cod_auto_confirm: codAutoConfirm,
+        updated_at: new Date().toISOString(),
+      };
+
+      await supabase.from("agent_configs").upsert(payload, { onConflict: "seller_id" });
+      setConfigSaveSuccess(true);
+      setTimeout(() => setConfigSaveSuccess(false), 3000);
+      console.log("[Setup Sync] Saved agent_configs to Supabase for seller:", user.id);
+    } catch (err) {
+      console.error("[Setup Sync Error] Failed to save agent_configs:", err);
+    } finally {
+      setSavingConfig(false);
+    }
+  };
+
 
   // Save values to localStorage fallbacks on changes
   useEffect(() => {
@@ -315,20 +372,37 @@ export default function SetupPage() {
 
     try {
       const supabase = createClient();
+      const policiesText = [
+        onboardingData.deliveryCharges ? `Delivery charges: ${onboardingData.deliveryCharges}` : "",
+        onboardingData.deliveryTime ? `Delivery time: ${onboardingData.deliveryTime}` : "",
+        onboardingData.returnPolicy ? `Return policy: ${onboardingData.returnPolicy}` : "",
+      ].filter(Boolean).join(" | ");
+
       await supabase
         .from("sellers")
         .update({
           business_name: onboardingData.businessName,
-          category: onboardingData.category,
           phone: onboardingData.whatsappNumber,
-          delivery_charges: onboardingData.deliveryCharges,
-          delivery_time: onboardingData.deliveryTime,
-          return_policy: onboardingData.returnPolicy,
-          agent_name: onboardingData.agentName,
-          agent_tone: onboardingData.aiTone,
-          agent_language: onboardingData.aiLanguage,
+          industry: onboardingData.category,
         })
         .eq("id", user.id);
+
+      window.localStorage.setItem(`onboardingData_${user.id}`, JSON.stringify(onboardingData));
+
+      const obItem: KnowledgeItem = {
+        id: "k_onboarding_profile",
+        type: "document",
+        name: "Store Onboarding Profile & Policies",
+        content: JSON.stringify(onboardingData),
+      };
+
+      const updatedKnowledge = [
+        obItem,
+        ...knowledgeList.filter((k) => k.id !== "k_onboarding_profile" && k.id !== "k_products_table"),
+      ];
+
+      setKnowledgeList(updatedKnowledge);
+      await saveConfigToSupabase(updatedKnowledge);
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -339,19 +413,51 @@ export default function SetupPage() {
     }
   };
 
-  const handleAddWebsite = () => {
+
+  const handleAddWebsite = async () => {
     if (!newUrl.trim()) return;
-    setKnowledgeList((prev) => [
-      ...prev,
-      {
-        id: `k_${Date.now()}`,
-        type: "website",
-        name: newUrl.replace(/https?:\/\/(www\.)?/, ""),
-        content: `Crawled content from website ${newUrl}. Policy and products extraction completed successfully.`,
-      },
-    ]);
+    const newItem: KnowledgeItem = {
+      id: `k_${Date.now()}`,
+      type: "website",
+      name: newUrl.replace(/https?:\/\/(www\.)?/, ""),
+      content: `Crawled content from website ${newUrl}. Policy and products extraction completed successfully.`,
+    };
+    const newList = [...knowledgeList, newItem];
+    setKnowledgeList(newList);
     setNewUrl("");
     setShowAddWebsiteModal(false);
+    await saveConfigToSupabase(newList);
+  };
+
+  const syncParsedProductsToSupabase = async (headers: string[], cleanRows: Record<string, string>[]) => {
+    if (!user || cleanRows.length === 0) return;
+    const hasName = headers.some((h) => /name|title|product/i.test(h));
+    if (!hasName) return;
+
+    try {
+      const supabase = createClient();
+      const nameCol = headers.find((h) => /name|title|product/i.test(h)) || "name";
+      const priceCol = headers.find((h) => /price|cost|rate/i.test(h));
+      const catCol = headers.find((h) => /cat/i.test(h));
+      const descCol = headers.find((h) => /desc/i.test(h));
+      const statusCol = headers.find((h) => /status|avail/i.test(h));
+
+      const productPayloads = cleanRows.map((r) => ({
+        seller_id: user.id,
+        name: String(r[nameCol] || "Product Item").trim(),
+        price: parseFloat(r[priceCol || ""] || "0") || 0,
+        category: String(r[catCol || ""] || "General").trim(),
+        availability_status: String(r[statusCol || ""] || "in_stock").trim(),
+        description: String(r[descCol || ""] || "").trim(),
+      })).filter((p) => p.name.length > 0);
+
+      if (productPayloads.length > 0) {
+        await supabase.from("products").upsert(productPayloads);
+        console.log(`[Products Sync] Upserted ${productPayloads.length} products to Supabase.`);
+      }
+    } catch (err) {
+      console.error("[Products Sync Error] Failed to insert CSV products:", err);
+    }
   };
 
   const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -362,7 +468,7 @@ export default function SetupPage() {
 
     if (extension === "xlsx" || extension === "xls") {
       const reader = new FileReader();
-      reader.onload = (evt) => {
+      reader.onload = async (evt) => {
         try {
           const bstr = evt.target?.result;
           const workbook = XLSX.read(bstr, { type: "binary" });
@@ -382,20 +488,22 @@ export default function SetupPage() {
           const fullContent = JSON.stringify({
             headers,
             rows: cleanRows,
-            fileName: file.name
+            fileName: file.name,
           });
 
-          setKnowledgeList((prev) => [
-            ...prev,
-            {
-              id: `k_${Date.now()}`,
-              type: "document",
-              name: `Excel: ${file.name} (${rowCount} rows)`,
-              content: fullContent,
-            },
-          ]);
+          const newItem: KnowledgeItem = {
+            id: `k_${Date.now()}`,
+            type: "document",
+            name: `Excel: ${file.name} (${rowCount} rows)`,
+            content: fullContent,
+          };
 
+          const newList = [...knowledgeList, newItem];
+          setKnowledgeList(newList);
           setShowAddDocModal(false);
+
+          await saveConfigToSupabase(newList);
+          await syncParsedProductsToSupabase(headers, cleanRows);
         } catch (err) {
           console.error("Error parsing Excel file:", err);
         }
@@ -405,35 +513,38 @@ export default function SetupPage() {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: (results) => {
+        complete: async (results) => {
           const rows = results.data as Record<string, string>[];
           const rowCount = rows.length;
           const headers = results.meta.fields ?? [];
-          
+
           const fullContent = JSON.stringify({
             headers,
             rows,
-            fileName: file.name
+            fileName: file.name,
           });
 
-          setKnowledgeList((prev) => [
-            ...prev,
-            {
-              id: `k_${Date.now()}`,
-              type: "document",
-              name: `CSV: ${file.name} (${rowCount} rows)`,
-              content: fullContent,
-            },
-          ]);
-          
+          const newItem: KnowledgeItem = {
+            id: `k_${Date.now()}`,
+            type: "document",
+            name: `CSV: ${file.name} (${rowCount} rows)`,
+            content: fullContent,
+          };
+
+          const newList = [...knowledgeList, newItem];
+          setKnowledgeList(newList);
           setShowAddDocModal(false);
+
+          await saveConfigToSupabase(newList);
+          await syncParsedProductsToSupabase(headers, rows);
         },
         error: (err) => {
           console.error("Error parsing CSV:", err);
-        }
+        },
       });
     }
   };
+
 
   const confirmDeleteKnowledge = async () => {
     if (!itemToDelete || !user) return;
@@ -484,7 +595,7 @@ export default function SetupPage() {
     }
   };
 
-  const handleSaveInspectItem = () => {
+  const handleSaveInspectItem = async () => {
     if (!inspectingItem) return;
     
     let finalContent = inspectContent;
@@ -492,15 +603,17 @@ export default function SetupPage() {
       finalContent = JSON.stringify(spreadsheetData);
     }
     
-    setKnowledgeList((prev) =>
-      prev.map((item) =>
-        item.id === inspectingItem.id
-          ? { ...item, name: inspectName, content: finalContent }
-          : item
-      )
+    const newList = knowledgeList.map((item) =>
+      item.id === inspectingItem.id
+        ? { ...item, name: inspectName, content: finalContent }
+        : item
     );
+
+    setKnowledgeList(newList);
     setInspectingItem(null);
     setSpreadsheetData(null);
+
+    await saveConfigToSupabase(newList);
   };
 
   const handleGridCellChange = (rowIndex: number, column: string, val: string) => {
@@ -534,31 +647,38 @@ export default function SetupPage() {
     });
   };
 
-  const handleAddQA = () => {
+  const handleAddQA = async () => {
     if (!newQ.trim() || !newA.trim()) return;
-    setKnowledgeList((prev) => [
-      ...prev,
-      {
-        id: `k_${Date.now()}`,
-        type: "qa",
-        name: `Q: ${newQ.substring(0, 20)}...`,
-        content: `Question: ${newQ}\nAnswer: ${newA}`,
-      },
-    ]);
+    const newItem: KnowledgeItem = {
+      id: `k_${Date.now()}`,
+      type: "qa",
+      name: `Q: ${newQ.substring(0, 20)}...`,
+      content: `Question: ${newQ}\nAnswer: ${newA}`,
+    };
+
+    const newList = [...knowledgeList, newItem];
+    setKnowledgeList(newList);
     setNewQ("");
     setNewA("");
     setShowAddQAModal(false);
+
+    await saveConfigToSupabase(newList);
   };
 
-  const handleRemoveGuideline = (index: number) => {
-    setToneGuidelines((prev) => prev.filter((_, idx) => idx !== index));
+  const handleRemoveGuideline = async (index: number) => {
+    const updatedTone = toneGuidelines.filter((_, idx) => idx !== index);
+    setToneGuidelines(updatedTone);
+    await saveConfigToSupabase(undefined, updatedTone);
   };
 
-  const handleAddGuideline = () => {
+  const handleAddGuideline = async () => {
     if (!newGuideline.trim()) return;
-    setToneGuidelines((prev) => [...prev, newGuideline.trim()]);
+    const updatedTone = [...toneGuidelines, newGuideline.trim()];
+    setToneGuidelines(updatedTone);
     setNewGuideline("");
+    await saveConfigToSupabase(undefined, updatedTone);
   };
+
 
   const handleRequestWhatsApp = async () => {
     if (!whatsappNumber.trim()) return;
@@ -575,6 +695,14 @@ export default function SetupPage() {
   const handleSendMessage = async () => {
     if (!userInput.trim() || botTyping) return;
     const userMsg = userInput.trim();
+    const newHistory = [
+      ...playgroundMessages.map((m) => ({
+        role: m.sender === "user" ? ("user" as const) : ("assistant" as const),
+        content: m.text,
+      })),
+      { role: "user" as const, content: userMsg },
+    ];
+
     setPlaygroundMessages((prev) => [
       ...prev,
       { id: `u_${Date.now()}`, sender: "user", text: userMsg },
@@ -582,59 +710,34 @@ export default function SetupPage() {
     setUserInput("");
     setBotTyping(true);
 
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    try {
+      const res = await fetch("/api/ai/reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          history: newHistory,
+        }),
+      });
 
-    let botReply = "";
-    const lower = userMsg.toLowerCase();
-    const memoryString = agentMemory.toLowerCase();
+      const data = await res.json();
+      const botReply = data.reply || data.response || "Sorry, I am having trouble fetching a response right now.";
 
-    // Scan uploaded knowledge base files (CSV/FAQ/Website) for real-time query answer matching
-    let matchedRow = "";
-    for (const item of knowledgeList) {
-      const lines = item.content.split("\n");
-      for (const line of lines) {
-        if (line.toLowerCase().includes(lower)) {
-          matchedRow = line;
-          break;
-        }
-      }
-      if (matchedRow) break;
+      setPlaygroundMessages((prev) => [
+        ...prev,
+        { id: `b_${Date.now()}`, sender: "bot", text: botReply },
+      ]);
+    } catch (err) {
+      console.error("Failed to generate AI reply:", err);
+      setPlaygroundMessages((prev) => [
+        ...prev,
+        { id: `b_${Date.now()}`, sender: "bot", text: "Error connecting to AI agent." },
+      ]);
+    } finally {
+      setBotTyping(false);
     }
-
-    if (matchedRow) {
-      botReply = `According to the uploaded database information: "${matchedRow}". Would you like to place an order or check sizing?`;
-    } else if (lower.includes("price") || lower.includes("cost") || lower.includes("rs")) {
-      if (lower.includes("hoop") || lower.includes("gold")) {
-        botReply = "The Gold-tone Hoop Earrings are Rs. 1,900 (on sale from original Rs. 2,500). They are currently running low in stock. Would you like to secure a pair?";
-      } else if (lower.includes("necklace") || lower.includes("pendant")) {
-        botReply = "Our Layered Pendant Necklace is Rs. 1,200. It features a sterling silver dual chain. Would you like me to book it for you?";
-      } else {
-        botReply = "Our products range from Rs. 450 to Rs. 2,500. Standard delivery nationwide is Rs. 200, or free on orders above Rs. 2,500.";
-      }
-    } else if (lower.includes("delivery") || lower.includes("shipping") || lower.includes("multan") || lower.includes("lahore")) {
-      botReply = "We offer free delivery inside Lahore. For the rest of Pakistan, standard delivery is Rs. 200 flat. Courier shipments usually arrive in 2–4 working days.";
-    } else if (lower.includes("return") || lower.includes("exchange") || lower.includes("refund")) {
-      botReply = "We accept exchanges within 7 days of delivery for unworn items in original packaging. Sale items and customized orders are final sales and cannot be exchanged.";
-    } else if (lower.includes("custom") || lower.includes("rose gold") || lower.includes("nameplate")) {
-      botReply = "That sounds like a custom request! Let me pass this chat directly to Meher so she can discuss design specifications and pricing with you.";
-    } else if (lower.includes("hello") || lower.includes("hi") || lower.includes("assalam")) {
-      botReply = hinglishSupport 
-        ? "Wa alaikum assalam! Welcome to our store. How can I help you find the perfect piece today?"
-        : "Hello! Thank you for contacting us. How can I assist you with our catalog today?";
-    } else {
-      botReply = `Thanks for asking. Based on ${user?.businessName || "our store"}'s guidelines, I'd love to help you check product availability. What category are you interested in?`;
-    }
-
-    if (conciseness === "concise" && botReply.length > 100) {
-      botReply = botReply.split(". ").slice(0, 2).join(". ") + ".";
-    }
-
-    setPlaygroundMessages((prev) => [
-      ...prev,
-      { id: `b_${Date.now()}`, sender: "bot", text: botReply },
-    ]);
-    setBotTyping(false);
   };
+
 
   if (authLoading || dataLoading) {
     return (
@@ -968,8 +1071,22 @@ export default function SetupPage() {
                 </div>
               </CardBody>
             </Card>
+
+            <div className="flex items-center gap-4 justify-end pt-2">
+              {configSaveSuccess && (
+                <span className="text-sm font-medium text-success">✅ Tasks & Rules saved to Supabase!</span>
+              )}
+              <Button
+                onClick={() => saveConfigToSupabase()}
+                disabled={savingConfig}
+                className="bg-teal hover:bg-teal-bright text-paper"
+              >
+                {savingConfig ? "Saving Rules..." : "Save Tasks & Rules"}
+              </Button>
+            </div>
           </div>
         )}
+
 
         {activeTab === "knowledge" && (
           <div className="space-y-6">

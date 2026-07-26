@@ -75,14 +75,37 @@ export async function POST(request: Request) {
     ]);
 
     if (sellerResult.error) {
+      console.error("[Reply API Error] Failed to fetch seller row:", sellerResult.error);
       return NextResponse.json(
         { error: "Supabase tables are not ready. Run the supplied migration first." },
         { status: 503 },
       );
     }
 
-    const seller = sellerResult.data as SellerRow;
+    const sellerData = sellerResult.data as any;
     const remoteConfig = configResult.data as AgentConfigRow | null;
+
+    const obItem = Array.isArray(remoteConfig?.knowledge_items)
+      ? (remoteConfig.knowledge_items as any[]).find((k) => k.id === "k_onboarding_profile")
+      : null;
+
+    let compiledPolicies = "";
+    if (obItem) {
+      try {
+        const obData = JSON.parse(obItem.content);
+        compiledPolicies = [
+          obData.deliveryCharges ? `Delivery charges: ${obData.deliveryCharges}` : "",
+          obData.deliveryTime ? `Delivery time: ${obData.deliveryTime}` : "",
+          obData.returnPolicy ? `Return policy: ${obData.returnPolicy}` : "",
+        ].filter(Boolean).join(" | ");
+      } catch {}
+    }
+
+    const seller: SellerRow = {
+      ...sellerData,
+      policies: compiledPolicies,
+    } as any;
+
     const config: AgentConfigRow = remoteConfig
       ? {
           ...DEFAULT_CONFIG,
