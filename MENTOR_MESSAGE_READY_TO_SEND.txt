@@ -1,0 +1,21 @@
+Assalam-o-Alaikum,
+
+I have prepared my work in a proper GitHub branch and will share the Pull Request link instead of sending another ZIP.
+
+Changes completed:
+- Removed AI Studio and the unnecessary prompt-optimizer workflow.
+- Added a prepared jewellery catalogue CSV.
+- Added a local CSV upload and question-answer demo at http://localhost:3000/demo.
+- Added exact, grounded answers for product price, availability, delivery charges, delivery time, and return policy.
+- Added a safe seller handoff when a product is unknown, data is missing, or sources conflict, so the assistant does not make up an answer.
+- Kept the OpenAI integration for broader supported questions, with evidence validation before accepting its response.
+
+I tested the necklace price and stock, delivery charges, delivery time, return policy, and an unknown leather-wallet question. The testing screenshots and full test details are included in the PR.
+
+SQL status: no SQL migration file is added or changed in this PR. The existing app/supabase/migrations/202607190001_ai_messaging.sql must already be applied for authenticated dashboard testing.
+
+For security, I did not commit .env.local or any real API key. Credentials must be added privately on the machine or deployment environment. The local /demo accuracy test works without credentials.
+
+PR link: PASTE_YOUR_PULL_REQUEST_LINK_HERE
+
+Please assign/review it according to the team workflow. Thank you.

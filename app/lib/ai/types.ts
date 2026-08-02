@@ -1,4 +1,14 @@
 export type ReplyAction = "reply" | "handoff";
+export type ReplyConfidence = "high" | "medium" | "low";
+export type ReplyIntent =
+  | "greeting"
+  | "product"
+  | "delivery"
+  | "returns"
+  | "payment"
+  | "order"
+  | "hours"
+  | "other";
 
 export type KnowledgeItem = {
   id: string;
@@ -34,6 +44,7 @@ export type SellerRow = {
   business_name: string | null;
   industry: string | null;
   website: string | null;
+  policies?: string | null;
 };
 
 export type ApprovedFact = {
@@ -50,6 +61,7 @@ export type ChatMessage = {
 export type TokenUsageLog = {
   sellerId: string;
   provider: "openai" | "vertex";
+  model?: string;
   promptTokens: number;
   cachedTokens: number;
   completionTokens: number;
@@ -57,10 +69,20 @@ export type TokenUsageLog = {
   cacheHitRate: string; // e.g. "85.5%"
 };
 
+export type ReplyEvidence = {
+  id: string;
+  label: string;
+  excerpt: string;
+};
+
 export type GroundedReply = {
   reply: string;
   action: ReplyAction;
   evidenceIds: string[];
+  evidence: ReplyEvidence[];
+  confidence: ReplyConfidence;
+  intent: ReplyIntent;
+  decisionReason: string;
+  latencyMs?: number;
   tokenUsage?: TokenUsageLog;
 };
-

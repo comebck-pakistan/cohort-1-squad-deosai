@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -21,6 +20,30 @@ interface KnowledgeItem {
   content: string;
 }
 
+interface OnboardingData {
+  businessName: string;
+  category: string;
+  whatsappNumber: string;
+  deliveryCharges: string;
+  deliveryTime: string;
+  returnPolicy: string;
+  agentName: string;
+  aiTone: string;
+  aiLanguage: string;
+}
+
+const EMPTY_ONBOARDING_DATA: OnboardingData = {
+  businessName: "",
+  category: "",
+  whatsappNumber: "",
+  deliveryCharges: "",
+  deliveryTime: "",
+  returnPolicy: "",
+  agentName: "",
+  aiTone: "friendly",
+  aiLanguage: "urdu-english",
+};
+
 const tryParseSpreadsheet = (content: string) => {
   try {
     const parsed = JSON.parse(content);
@@ -36,7 +59,7 @@ export default function SetupPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SubTab>("onboarding");
   const [initialized, setInitialized] = useState(false);
-  const [onboardingData, setOnboardingData] = useState<any>(null);
+  const [onboardingData, setOnboardingData] = useState<OnboardingData | null>(null);
   const [savingOnboarding, setSavingOnboarding] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -70,8 +93,6 @@ export default function SetupPage() {
 
   // Knowledge form states
   const [newUrl, setNewUrl] = useState("");
-  const [newDocName, setNewDocName] = useState("");
-  const [newDocContent, setNewDocContent] = useState("");
   const [newQ, setNewQ] = useState("");
   const [newA, setNewA] = useState("");
 
@@ -102,20 +123,19 @@ export default function SetupPage() {
     {
       id: "m_init",
       sender: "bot",
-      text: "Hello! I am your AI Auto-DM Agent. Type anything to test how I respond based on your Tasks & Rules.",
+      text: "Hello! Upload your catalogue CSV, then ask me about exact product prices, stock, delivery charges, or returns.",
     },
   ]);
   const [userInput, setUserInput] = useState("");
   const [botTyping, setBotTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (user && !initialized) {
-      setWhatsappNumber(user.phone || "");
-      setWhatsappRequested(user.onboarded);
-      setInitialized(true);
-    }
-  }, [user, initialized]);
+  const updateOnboardingField = (field: keyof OnboardingData, value: string) => {
+    setOnboardingData((current) => ({
+      ...(current ?? EMPTY_ONBOARDING_DATA),
+      [field]: value,
+    }));
+  };
 
   // Fetch setup values from Supabase tables
   useEffect(() => {
@@ -126,6 +146,8 @@ export default function SetupPage() {
       }
 
       setDataLoading(true);
+      setWhatsappNumber(user.phone || "");
+      setWhatsappRequested(user.onboarded);
       const supabase = createClient();
 
       try {
@@ -204,7 +226,7 @@ export default function SetupPage() {
             name: `Supabase Products Table (${rows.length} items)`,
             content: JSON.stringify({
               headers: ["id", "name", "category", "price", "availability_status", "description"],
-              rows: rows.map((r: any) => ({
+              rows: rows.map((r: Record<string, unknown>) => ({
                 id: String(r.id),
                 name: String(r.name || ""),
                 category: String(r.category || ""),
@@ -226,6 +248,7 @@ export default function SetupPage() {
         console.error("Failed to load onboarding data:", err);
       } finally {
         setDataLoading(false);
+        setInitialized(true);
       }
     }
 
@@ -372,12 +395,6 @@ export default function SetupPage() {
 
     try {
       const supabase = createClient();
-      const policiesText = [
-        onboardingData.deliveryCharges ? `Delivery charges: ${onboardingData.deliveryCharges}` : "",
-        onboardingData.deliveryTime ? `Delivery time: ${onboardingData.deliveryTime}` : "",
-        onboardingData.returnPolicy ? `Return policy: ${onboardingData.returnPolicy}` : "",
-      ].filter(Boolean).join(" | ");
-
       await supabase
         .from("sellers")
         .update({
@@ -431,25 +448,51 @@ export default function SetupPage() {
 
   const syncParsedProductsToSupabase = async (headers: string[], cleanRows: Record<string, string>[]) => {
     if (!user || cleanRows.length === 0) return;
-    const hasName = headers.some((h) => /name|title|product/i.test(h));
-    if (!hasName) return;
+    const normalizedHeader = (value: string) =>
+      value.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+    const findColumn = (aliases: string[]) =>
+      headers.find((header) => aliases.includes(normalizedHeader(header)));
+    const nameCol = findColumn(["name", "title", "product", "productname", "item", "itemname"]);
+    if (!nameCol) return;
 
     try {
       const supabase = createClient();
-      const nameCol = headers.find((h) => /name|title|product/i.test(h)) || "name";
-      const priceCol = headers.find((h) => /price|cost|rate/i.test(h));
-      const catCol = headers.find((h) => /cat/i.test(h));
-      const descCol = headers.find((h) => /desc/i.test(h));
-      const statusCol = headers.find((h) => /status|avail/i.test(h));
+      const priceCol = findColumn(["price", "retailprice", "sellingprice"]);
+      const catCol = findColumn(["category", "productcategory", "type"]);
+      const descCol = findColumn(["description", "desc", "details"]);
+      const statusCol = findColumn([
+        "availability",
+        "availabilitystatus",
+        "instock",
+        "stock",
+        "stockstatus",
+        "status",
+      ]);
+      const mappedColumns = new Set(
+        [nameCol, priceCol, catCol, descCol, statusCol].filter(Boolean),
+      );
 
-      const productPayloads = cleanRows.map((r) => ({
-        seller_id: user.id,
-        name: String(r[nameCol] || "Product Item").trim(),
-        price: parseFloat(r[priceCol || ""] || "0") || 0,
-        category: String(r[catCol || ""] || "General").trim(),
-        availability_status: String(r[statusCol || ""] || "in_stock").trim(),
-        description: String(r[descCol || ""] || "").trim(),
-      })).filter((p) => p.name.length > 0);
+      const productPayloads = cleanRows
+        .map((row) => ({
+          seller_id: user.id,
+          name: String(row[nameCol] || "").trim(),
+          price:
+            Number.parseFloat(
+              String(row[priceCol || ""] || "0").replace(/,/g, ""),
+            ) || 0,
+          category: String(row[catCol || ""] || "General").trim(),
+          availability_status: String(
+            row[statusCol || ""] || "in_stock",
+          ).trim(),
+          description: String(row[descCol || ""] || "").trim(),
+          metadata: Object.fromEntries(
+            Object.entries(row).filter(
+              ([key, value]) =>
+                !mappedColumns.has(key) && String(value ?? "").trim().length > 0,
+            ),
+          ),
+        }))
+        .filter((product) => product.name.length > 0);
 
       if (productPayloads.length > 0) {
         await supabase.from("products").upsert(productPayloads);
@@ -716,11 +759,15 @@ export default function SetupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMsg,
-          history: newHistory,
+          conversationHistory: newHistory.slice(0, -1),
+          persist: false,
         }),
       });
 
       const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "The assistant could not answer.");
+      }
       const botReply = data.reply || data.response || "Sorry, I am having trouble fetching a response right now.";
 
       setPlaygroundMessages((prev) => [
@@ -846,7 +893,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-business-name"
                       value={onboardingData?.businessName || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, businessName: e.target.value })}
+                      onChange={(e) => updateOnboardingField("businessName", e.target.value)}
                       placeholder="e.g. Glam Jewellery"
                     />
                   </div>
@@ -855,7 +902,7 @@ export default function SetupPage() {
                     <Select
                       id="ob-category"
                       value={onboardingData?.category || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, category: e.target.value })}
+                      onChange={(e) => updateOnboardingField("category", e.target.value)}
                     >
                       <option value="">Select Category...</option>
                       <option value="Jewellery">Jewellery</option>
@@ -871,7 +918,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-whatsapp"
                       value={onboardingData?.whatsappNumber || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, whatsappNumber: e.target.value })}
+                      onChange={(e) => updateOnboardingField("whatsappNumber", e.target.value)}
                       placeholder="+92 300 1234567"
                     />
                   </div>
@@ -880,7 +927,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-agent-name"
                       value={onboardingData?.agentName || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, agentName: e.target.value })}
+                      onChange={(e) => updateOnboardingField("agentName", e.target.value)}
                       placeholder="e.g. Sara"
                     />
                   </div>
@@ -889,7 +936,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-delivery-charges"
                       value={onboardingData?.deliveryCharges || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryCharges: e.target.value })}
+                      onChange={(e) => updateOnboardingField("deliveryCharges", e.target.value)}
                       placeholder="e.g. Rs. 150"
                     />
                   </div>
@@ -898,7 +945,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-delivery-time"
                       value={onboardingData?.deliveryTime || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryTime: e.target.value })}
+                      onChange={(e) => updateOnboardingField("deliveryTime", e.target.value)}
                       placeholder="e.g. 2-3 Days"
                     />
                   </div>
@@ -907,7 +954,7 @@ export default function SetupPage() {
                     <Input
                       id="ob-return-policy"
                       value={onboardingData?.returnPolicy || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, returnPolicy: e.target.value })}
+                      onChange={(e) => updateOnboardingField("returnPolicy", e.target.value)}
                       placeholder="e.g. 7 days return..."
                     />
                   </div>
@@ -916,7 +963,7 @@ export default function SetupPage() {
                     <Select
                       id="ob-ai-tone"
                       value={onboardingData?.aiTone || "friendly"}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, aiTone: e.target.value })}
+                      onChange={(e) => updateOnboardingField("aiTone", e.target.value)}
                     >
                       <option value="professional">Professional</option>
                       <option value="friendly">Friendly</option>
@@ -929,7 +976,7 @@ export default function SetupPage() {
                     <Select
                       id="ob-ai-language"
                       value={onboardingData?.aiLanguage || "urdu-english"}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, aiLanguage: e.target.value })}
+                      onChange={(e) => updateOnboardingField("aiLanguage", e.target.value)}
                     >
                       <option value="urdu-english">Urdu + English</option>
                       <option value="urdu">Urdu</option>
@@ -1093,9 +1140,33 @@ export default function SetupPage() {
             <div>
               <h2 className="font-display text-2xl tracking-tight text-ink">Knowledge & Data</h2>
               <p className="text-sm text-ink-soft mt-1">
-                Train your AI agent on specific catalog documents, pricing models, or website details.
+                Upload approved catalogue facts so the assistant can answer without guessing.
               </p>
             </div>
+
+            <Card className="border-teal bg-teal-soft/10">
+              <CardBody className="space-y-3">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Mentor accuracy test</p>
+                  <p className="mt-1 text-xs leading-relaxed text-ink-soft">
+                    Download the prepared CSV, upload it below, then ask the exact-data questions in the Playground.
+                    If a fact is missing or conflicting, the assistant hands the chat to the seller instead of inventing an answer.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <a
+                    href="/sample-data/deosai_catalogue.csv"
+                    download
+                    className="inline-flex items-center justify-center rounded-lg bg-teal px-3 py-2 text-xs font-semibold text-paper shadow-sm transition-all hover:bg-teal-bright"
+                  >
+                    Download sample CSV
+                  </a>
+                  <span className="text-[11px] text-ink-soft">
+                    Try: necklace price · necklace availability · delivery charges · return policy
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
 
             {knowledgeList.length === 0 ? (
               <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-card py-16 text-center space-y-4">
@@ -1363,7 +1434,7 @@ export default function SetupPage() {
                   <div>
                     <h4 className="text-sm font-semibold text-ink">Upload CSV or Excel Catalogue</h4>
                     <p className="text-xs text-ink-soft mt-1">
-                      Upload a CSV (.csv) or Excel (.xlsx, .xls) file containing your product catalog. We will automatically parse columns like product name, price, variants, and descriptions.
+                      Upload product names, prices, availability, delivery charges, delivery time, and return policy. Exact fields are preserved for verified answers.
                     </p>
                   </div>
                   <div className="rounded-xl border border-dashed border-line bg-paper/40 p-6 text-center">
@@ -1617,7 +1688,7 @@ export default function SetupPage() {
                 {
                   id: "m_init",
                   sender: "bot",
-                  text: "Hello! I am your AI Auto-DM Agent. Type anything to test how I respond based on your Tasks & Rules.",
+                  text: "Hello! Upload your catalogue CSV, then ask me about exact product prices, stock, delivery charges, or returns.",
                 },
               ])
             }
@@ -1670,7 +1741,7 @@ export default function SetupPage() {
             value={userInput}
             onChange={(e) => setUserInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Ask your AI Agent anything..."
+            placeholder="Ask about price, stock, delivery, or returns..."
             className="flex-1 h-9 text-xs"
           />
           <button

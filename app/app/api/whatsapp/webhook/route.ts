@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { generateGroundedReply } from "@/lib/ai/generate-reply";
 import type {
   AgentConfigRow,
+  GroundedReply,
   KnowledgeItem,
   ProductRow,
   SellerRow,
@@ -193,6 +194,20 @@ export async function POST(request: Request) {
 
     if (conversationError || !conversation) throw conversationError;
 
+    const { data: recentMessages } = await supabase
+      .from("messages")
+      .select("direction,body")
+      .eq("conversation_id", conversation.id)
+      .order("created_at", { ascending: false })
+      .limit(8);
+
+    const conversationHistory = (recentMessages || [])
+      .reverse()
+      .map((message) => ({
+        role: message.direction === "inbound" ? ("user" as const) : ("assistant" as const),
+        content: message.body,
+      }));
+
     await supabase.from("messages").insert({
       seller_id: account.seller_id,
       conversation_id: conversation.id,
@@ -203,16 +218,25 @@ export async function POST(request: Request) {
       status: "received",
     });
 
-    let result;
+    let result: GroundedReply;
     try {
       result = await generateGroundedReply({
         message: incoming.text,
         seller,
         config,
         products: (productsResult.data || []) as ProductRow[],
+        conversationHistory,
       });
     } catch {
-      result = { reply: config.handoff_message, action: "handoff" as const, evidenceIds: [] };
+      result = {
+        reply: config.handoff_message,
+        action: "handoff",
+        evidenceIds: [],
+        evidence: [],
+        confidence: "low",
+        intent: "other",
+        decisionReason: "The AI provider was unavailable, so the message was handed off safely.",
+      };
     }
 
     const sendResult = await getWhatsAppProvider().sendText({
@@ -231,7 +255,15 @@ export async function POST(request: Request) {
       body: result.reply,
       action: result.action,
       status: sendResult.status,
-      metadata: { evidence_ids: result.evidenceIds },
+      metadata: {
+        evidence_ids: result.evidenceIds,
+        evidence: result.evidence,
+        confidence: result.confidence,
+        intent: result.intent,
+        decision_reason: result.decisionReason,
+        latency_ms: result.latencyMs,
+        token_usage: result.tokenUsage,
+      },
     });
 
     await supabase

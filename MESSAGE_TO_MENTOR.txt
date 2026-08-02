@@ -1,0 +1,17 @@
+Assalam-o-Alaikum,
+
+I have updated Deosai according to your feedback.
+
+I removed AI Studio and its prompt-optimization features because they were adding unnecessary complexity. I kept one simple workflow inside Dashboard → Setup: download or upload a CSV catalogue, then test customer questions in the Playground.
+
+I created a sample jewellery CSV containing product names, prices, stock status, descriptions, delivery charges, delivery time, and return policy. The assistant now answers price, availability, delivery, and return questions directly from exact uploaded fields. Each accepted answer is linked internally to its source row.
+
+The main safety improvement is that the assistant no longer guesses these facts. If a product is not present, a requested field is missing, or uploaded sources conflict, it hands the conversation to the seller instead of making up an answer. I tested the necklace price and availability, delivery charges, delivery time, return policy, and an unknown-product case.
+
+The project runs locally with npm run dev. A credential-free accuracy test is available at http://localhost:3000/demo. Setup and test instructions are included in MENTOR_HANDOFF.md, and the prepared CSV is included in app/public/sample-data.
+
+For security, real Supabase and OpenAI API keys are not included in the ZIP. They must be added privately to app/.env.local.
+
+I would appreciate your feedback on the CSV workflow, answer accuracy, and human-handoff behavior.
+
+Thank you.

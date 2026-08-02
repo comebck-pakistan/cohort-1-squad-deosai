@@ -1,59 +1,50 @@
+import { createHash } from "node:crypto";
 import OpenAI from "openai";
-import { buildStaticSellerPrompt, formatDynamicContext, getFastPathGreeting } from "@/lib/ai/grounding";
+import {
+  buildStaticSellerPrompt,
+  findApprovedFacts,
+  formatDynamicContext,
+  formatGroundedCustomerTurn,
+  getFastPathGreeting,
+} from "@/lib/ai/grounding";
+import {
+  getVerifiedDataReply,
+  isFactOnlyQuery,
+} from "@/lib/ai/verified-reply";
 import { vertexCacheManager } from "@/lib/ai/vertex-cache";
 
 import type {
   AgentConfigRow,
+  ApprovedFact,
   ChatMessage,
   GroundedReply,
   ProductRow,
+  ReplyConfidence,
+  ReplyEvidence,
+  ReplyIntent,
   SellerRow,
   TokenUsageLog,
 } from "@/lib/ai/types";
 
-function handoff({
-  config,
-  userMessage = "",
-}: {
-  config?: AgentConfigRow;
-  userMessage?: string;
-} = {}): GroundedReply {
-  const isPayment = /\b(pay|payment|easypaisa|jazzcash|card|bank|transfer|cod|cash)\b/i.test(userMessage);
-  const isDelivery = /\b(delivery|shipping|rates|charges|multan|lahore|karachi|skardu|city|deliver|ship|hours|location|address)\b/i.test(userMessage);
-  const isProduct = /\b(product|item|design|suit|dress|kurti|shirt|shoe|size|stock|available|color|colour)\b/i.test(userMessage);
-
-  let customHandoff = config?.handoff_message?.trim();
-  let replyText = "";
-
-  if (customHandoff && customHandoff !== "I couldn't find that product in our catalogue.") {
-    replyText = customHandoff;
-  } else if (isPayment) {
-    replyText = "I don't have our exact payment options listed right now. Let me connect you directly with the seller so they can confirm details with you!";
-  } else if (isDelivery) {
-    replyText = "I don't have our exact delivery rates or location coverage listed right now. Let me connect you directly with the seller to assist you!";
-  } else if (isProduct) {
-    replyText = "I couldn't find that product in our catalogue.";
-  } else {
-    replyText = "I don't have that exact detail in our store guide right now. I will notify the seller so they can assist you personally!";
-  }
-
-  return {
-    reply: replyText,
-    action: "handoff",
-    evidenceIds: [],
-  };
-}
-
-
+const INTENTS: ReplyIntent[] = [
+  "greeting",
+  "product",
+  "delivery",
+  "returns",
+  "payment",
+  "order",
+  "hours",
+  "other",
+];
 
 type ModelReply = {
   reply?: unknown;
   supported?: unknown;
   evidence_ids?: unknown;
+  intent?: unknown;
 };
 
 function parseModelReply(value: string): ModelReply | null {
-
   const cleaned = value
     .trim()
     .replace(/^```(?:json)?\s*/i, "")
@@ -66,29 +57,103 @@ function parseModelReply(value: string): ModelReply | null {
   }
 }
 
-/**
- * Logs token usage metrics per request tagged by seller ID.
- * Tracks cached_tokens to measure actual cache hit rate before & after optimization.
- */
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function inferIntent(message: string): ReplyIntent {
+  if (/\b(pay|payment|easypaisa|jazzcash|card|bank|transfer|cod|cash)\b/i.test(message)) {
+    return "payment";
+  }
+  if (/\b(delivery|shipping|rates|charges|city|deliver|ship|courier)\b/i.test(message)) {
+    return "delivery";
+  }
+  if (/\b(return|refund|exchange)\b/i.test(message)) return "returns";
+  if (/\b(hours|timings?|open|close|location|address)\b/i.test(message)) return "hours";
+  if (/\b(order|buy|purchase|confirm|quantity|address)\b/i.test(message)) return "order";
+  if (/\b(product|item|design|suit|dress|kurti|shirt|shoe|size|stock|available|color|colour|price)\b/i.test(message)) {
+    return "product";
+  }
+  return "other";
+}
+
+function handoff({
+  config,
+  userMessage = "",
+  tokenUsage,
+  latencyMs,
+}: {
+  config?: AgentConfigRow;
+  userMessage?: string;
+  tokenUsage?: TokenUsageLog;
+  latencyMs?: number;
+} = {}): GroundedReply {
+  const intent = inferIntent(userMessage);
+  const customHandoff = config?.handoff_message?.trim();
+  let replyText = "";
+
+  if (customHandoff && customHandoff !== "I couldn't find that product in our catalogue.") {
+    replyText = customHandoff;
+  } else if (intent === "payment") {
+    replyText =
+      "I don't have our exact payment options listed right now. Let me connect you with the seller so they can confirm.";
+  } else if (intent === "delivery" || intent === "hours") {
+    replyText =
+      "I don't have that exact delivery or store detail listed right now. Let me connect you with the seller.";
+  } else if (intent === "product" || intent === "order") {
+    replyText =
+      "I couldn't verify that item or order detail in our catalogue. Let me connect you with the seller.";
+  } else {
+    replyText =
+      "I don't have enough verified information to answer that accurately. I’ll ask the seller to help you personally.";
+  }
+
+  return {
+    reply: replyText,
+    action: "handoff",
+    evidenceIds: [],
+    evidence: [],
+    confidence: "low",
+    intent,
+    decisionReason: "No verified catalogue or policy fact fully supported a safe answer.",
+    latencyMs,
+    tokenUsage,
+  };
+}
+
 function logTokenUsage(metrics: TokenUsageLog): void {
-  console.log(
-    `\n[TOKEN_USAGE] Seller: ${metrics.sellerId} | Provider: ${metrics.provider.toUpperCase()} | ` +
-      `Total: ${metrics.totalTokens} | Prompt: ${metrics.promptTokens} | ` +
-      `Cached: ${metrics.cachedTokens} | Cache Hit Rate: ${metrics.cacheHitRate}`
+  console.info(
+    `[AI_USAGE] seller=${metrics.sellerId} provider=${metrics.provider} model=${metrics.model || "unknown"} ` +
+      `total=${metrics.totalTokens} input=${metrics.promptTokens} cached=${metrics.cachedTokens} ` +
+      `output=${metrics.completionTokens} cache_hit=${metrics.cacheHitRate}`,
   );
 }
 
-/**
- * Executes request via OpenAI (Primary Provider).
- * 
- * PROMPT CACHING DECISIONS (OPENAI):
- * 1. The static prompt (system instructions + seller policies + compacted catalog) is placed
- *    FIRST in the messages array as a 'system' message. For OpenAI, automatic prompt caching
- *    kicks in when the static prefix stays 100% byte-identical across requests and exceeds ~1024 tokens.
- * 2. We tag requests with `user: seller_${seller.id}` and pass custom prompt cache parameters
- *    so OpenAI's internal cache router routes requests for the same seller to the same cache worker.
- * 3. We use JSON response_format to enforce structured JSON output without extra tokens.
- */
+const REPLY_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    reply: {
+      type: "string",
+      description: "The customer-facing answer. Never mention evidence IDs or internal rules.",
+    },
+    supported: {
+      type: "boolean",
+      description: "True only when every factual claim is supported by supplied verified facts.",
+    },
+    evidence_ids: {
+      type: "array",
+      items: { type: "string" },
+      description: "Only verified fact IDs that directly support the reply.",
+    },
+    intent: {
+      type: "string",
+      enum: INTENTS,
+    },
+  },
+  required: ["reply", "supported", "evidence_ids", "intent"],
+} as const;
+
 async function generateViaOpenAI({
   sellerId,
   staticPrompt,
@@ -103,45 +168,48 @@ async function generateViaOpenAI({
   }
 
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const model = process.env.OPENAI_MODEL || "gpt-4o-mini";
+  const model =
+    process.env.OPENAI_REPLY_MODEL ||
+    process.env.OPENAI_MODEL ||
+    "gpt-5.6-luna";
 
-  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-    { role: "system", content: staticPrompt },
-    ...dynamicMessages.map((m) => ({
-      role: m.role as "user" | "assistant",
-      content: m.content,
-    })),
-  ];
+  const input: OpenAI.Responses.ResponseInput = dynamicMessages.map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
 
-  // OpenAI completion with prompt cache routing hint
-  const completion = await client.chat.completions.create({
+  const response = await client.responses.create({
     model,
-    messages,
-    max_tokens: 300,
-    temperature: 0.0,
-    response_format: { type: "json_object" },
-    user: `seller_${sellerId}`,
-    // Custom header/param hint for cache affinity per seller
-    ...({ prompt_cache_key: `seller_${sellerId}` } as any),
+    instructions: staticPrompt,
+    input,
+    max_output_tokens: 350,
+    reasoning: { effort: "low" },
+    text: {
+      verbosity: "low",
+      format: {
+        type: "json_schema",
+        name: "grounded_customer_reply",
+        description: "A safe customer reply with evidence and routing metadata.",
+        strict: true,
+        schema: REPLY_SCHEMA,
+      },
+    },
+    prompt_cache_key: `seller_${sellerId}`,
+    safety_identifier: createHash("sha256").update(sellerId).digest("hex").slice(0, 64),
+    store: false,
   });
 
-  const outputText = completion.choices[0]?.message?.content || "";
-  const usage = completion.usage;
-
-  const promptTokens = usage?.prompt_tokens || 0;
-  const completionTokens = usage?.completion_tokens || 0;
+  const usage = response.usage;
+  const promptTokens = usage?.input_tokens || 0;
+  const completionTokens = usage?.output_tokens || 0;
+  const cachedTokens = usage?.input_tokens_details?.cached_tokens || 0;
   const totalTokens = usage?.total_tokens || promptTokens + completionTokens;
-
-  // Extract cached_tokens from OpenAI API response (usage.prompt_tokens_details.cached_tokens)
-  const promptDetails = (usage as any)?.prompt_tokens_details;
-  const cachedTokens = typeof promptDetails?.cached_tokens === "number" ? promptDetails.cached_tokens : 0;
-
-  const hitRateRatio = promptTokens > 0 ? (cachedTokens / promptTokens) * 100 : 0;
-  const cacheHitRate = `${hitRateRatio.toFixed(1)}%`;
+  const cacheHitRate = `${(promptTokens > 0 ? (cachedTokens / promptTokens) * 100 : 0).toFixed(1)}%`;
 
   const tokenUsage: TokenUsageLog = {
     sellerId,
     provider: "openai",
+    model,
     promptTokens,
     cachedTokens,
     completionTokens,
@@ -150,18 +218,9 @@ async function generateViaOpenAI({
   };
 
   logTokenUsage(tokenUsage);
-  return { outputText, tokenUsage };
+  return { outputText: response.output_text || "", tokenUsage };
 }
 
-/**
- * Executes request via Vertex AI / Gemini (Fallback Provider).
- * 
- * PROMPT CACHING DECISIONS (VERTEX AI / GEMINI):
- * 1. Explicit Context Caching: Uses CachedContent resource created per seller.
- * 2. When a cachedContent reference is available, the static block is stored server-side in Vertex AI,
- *    so we omit the system instructions from the dynamic message payload to avoid duplicate tokens.
- * 3. Extracts usageMetadata.cachedContentTokenCount from Gemini response.
- */
 async function generateViaVertex({
   sellerId,
   staticPrompt,
@@ -177,8 +236,6 @@ async function generateViaVertex({
   }
 
   const modelName = process.env.VERTEX_MODEL || "gemini-1.5-flash";
-
-  // Check or lazily create CachedContent reference for seller (24h TTL)
   const cachedContentName = await vertexCacheManager.getOrCreateCache({
     sellerId,
     staticPrompt,
@@ -186,58 +243,59 @@ async function generateViaVertex({
   });
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-
-  // Format contents array for Gemini API
-  const contents = dynamicMessages.map((m) => ({
-    role: m.role === "assistant" ? "model" : "user",
-    parts: [{ text: m.content }],
+  const contents = dynamicMessages.map((message) => ({
+    role: message.role === "assistant" ? "model" : "user",
+    parts: [{ text: message.content }],
   }));
 
-  const payload: Record<string, any> = {
+  const payload: Record<string, unknown> = {
     contents,
     generationConfig: {
-      temperature: 0.0,
-      maxOutputTokens: 300,
+      temperature: 0,
+      maxOutputTokens: 350,
       responseMimeType: "application/json",
+      responseSchema: REPLY_SCHEMA,
     },
   };
 
-  // If explicit cache exists, attach cachedContent resource reference
   if (cachedContentName) {
     payload.cachedContent = cachedContentName;
   } else {
-    // Fallback: pass static prompt as systemInstruction if cachedContent unavailable
-    payload.systemInstruction = {
-      parts: [{ text: staticPrompt }],
-    };
+    payload.systemInstruction = { parts: [{ text: staticPrompt }] };
   }
 
-  const res = await fetch(endpoint, {
+  const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    throw new Error(`Vertex AI API error (${res.status}): ${errorText}`);
+  if (!response.ok) {
+    throw new Error(`Vertex AI API error (${response.status}): ${await response.text()}`);
   }
 
-  const data = await res.json();
+  const data = (await response.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    usageMetadata?: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      cachedContentTokenCount?: number;
+      totalTokenCount?: number;
+    };
+  };
+
   const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  const usage = data.usageMetadata || {};
-
-  const promptTokens = usage.promptTokenCount || 0;
-  const completionTokens = usage.candidatesTokenCount || 0;
-  const cachedTokens = usage.cachedContentTokenCount || 0;
-  const totalTokens = usage.totalTokenCount || promptTokens + completionTokens;
-
-  const hitRateRatio = promptTokens > 0 ? (cachedTokens / promptTokens) * 100 : 0;
-  const cacheHitRate = `${hitRateRatio.toFixed(1)}%`;
+  const usage = data.usageMetadata;
+  const promptTokens = usage?.promptTokenCount || 0;
+  const completionTokens = usage?.candidatesTokenCount || 0;
+  const cachedTokens = usage?.cachedContentTokenCount || 0;
+  const totalTokens = usage?.totalTokenCount || promptTokens + completionTokens;
+  const cacheHitRate = `${(promptTokens > 0 ? (cachedTokens / promptTokens) * 100 : 0).toFixed(1)}%`;
 
   const tokenUsage: TokenUsageLog = {
     sellerId,
     provider: "vertex",
+    model: modelName,
     promptTokens,
     cachedTokens,
     completionTokens,
@@ -249,17 +307,60 @@ async function generateViaVertex({
   return { outputText, tokenUsage };
 }
 
-/**
- * Main grounded reply generator.
- * 
- * CACHING & TOKEN MINIMIZATION FLOW:
- * 1. Checks fast-path greeting interceptor (0-tokens for "helo", "hi", "salam").
- * 2. Builds 100% byte-identical static prompt per seller (instructions + stripped catalog + policies).
- * 3. Formats dynamic message context (capped at 6 messages / 3 turns, preserving prompt prefix).
- * 4. Attempts primary provider (OpenAI with automatic prompt caching).
- * 5. On failure or credit exhaustion, falls back seamlessly to Vertex AI (Gemini with explicit CachedContent).
- * 6. Returns parsed structured JSON reply and token usage metrics.
- */
+function evidenceForFacts(facts: ApprovedFact[], evidenceIds: string[]): ReplyEvidence[] {
+  const selected = new Set(evidenceIds);
+
+  return facts
+    .filter((fact) => selected.has(fact.id))
+    .map((fact) => {
+      const productMatch = fact.text.match(/Product:\s*([^|]+)/i);
+      const knowledgeMatch = fact.text.match(/^([^|]{1,80})\s*\|/);
+      const label = productMatch?.[1]?.trim()
+        || (fact.id === "seller:identity" ? "Store profile and policies" : "")
+        || (fact.id === "seller:memory" ? "Seller-approved store guide" : "")
+        || knowledgeMatch?.[1]?.trim()
+        || "Verified knowledge";
+
+      return {
+        id: fact.id,
+        label,
+        excerpt: fact.text.length > 190 ? `${fact.text.slice(0, 190)}…` : fact.text,
+      };
+    });
+}
+
+function evidenceSupportsIntent(intent: ReplyIntent, evidence: ReplyEvidence[]) {
+  if (evidence.length === 0) return false;
+
+  if (intent === "product" || intent === "order") {
+    return evidence.some(
+      (item) => item.id.startsWith("product:") || item.id.startsWith("knowledge:"),
+    );
+  }
+
+  if (["delivery", "returns", "payment", "hours"].includes(intent)) {
+    const topic =
+      intent === "delivery"
+        ? /deliver|ship|courier|charge|city/i
+        : intent === "returns"
+          ? /return|refund|exchange/i
+          : intent === "payment"
+            ? /pay|cash|cod|bank|jazzcash|easypaisa/i
+            : /hour|time|open|close|location|address/i;
+    return evidence.some((item) => topic.test(item.excerpt));
+  }
+
+  return true;
+}
+
+function confidenceForFacts(facts: ApprovedFact[], evidenceIds: string[]): ReplyConfidence {
+  const selected = facts.filter((fact) => evidenceIds.includes(fact.id));
+  const topScore = Math.max(0, ...selected.map((fact) => fact.score));
+  if (topScore >= 50 || selected.length >= 2) return "high";
+  if (topScore >= 15) return "medium";
+  return "low";
+}
+
 export async function generateGroundedReply({
   message,
   seller,
@@ -273,90 +374,149 @@ export async function generateGroundedReply({
   products: ProductRow[];
   conversationHistory?: ChatMessage[];
 }): Promise<GroundedReply> {
-  // 1. FAST-PATH ZERO-TOKEN INTERCEPTOR FOR PURE GREETINGS (including typos like "Helo")
+  const startedAt = Date.now();
   const fastGreeting = getFastPathGreeting({
     message,
     sellerId: seller.id,
     businessName: seller.business_name,
   });
-  if (fastGreeting) return fastGreeting;
+  if (fastGreeting) {
+    return { ...fastGreeting, latencyMs: Date.now() - startedAt };
+  }
 
-  // 2. Build byte-identical static prompt per seller
+  const verifiedDataReply = getVerifiedDataReply({
+    message,
+    seller,
+    config,
+    products,
+  });
+  if (verifiedDataReply) {
+    return {
+      ...verifiedDataReply,
+      latencyMs: Date.now() - startedAt,
+    };
+  }
 
+  if (isFactOnlyQuery(message)) {
+    return handoff({
+      config,
+      userMessage: message,
+      latencyMs: Date.now() - startedAt,
+    });
+  }
+
+  const facts = findApprovedFacts({ message, seller, config, products });
   const staticPrompt = buildStaticSellerPrompt({ seller, config, products });
-
-  // 2. Format dynamic conversation turns (strictly bounded, appending newest turn at end)
+  const groundedTurn = formatGroundedCustomerTurn({ message, facts });
   const dynamicMessages = formatDynamicContext({
     history: conversationHistory,
-    currentMessage: message,
+    currentMessage: groundedTurn,
   });
 
   const preferredProvider = process.env.AI_PROVIDER || "openai";
+  const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
+  const hasVertex = Boolean(process.env.VERTEX_API_KEY || process.env.GEMINI_API_KEY);
+  if (
+    (preferredProvider === "openai" && !hasOpenAI && !hasVertex) ||
+    (preferredProvider !== "openai" && !hasVertex)
+  ) {
+    return handoff({
+      config,
+      userMessage: message,
+      latencyMs: Date.now() - startedAt,
+    });
+  }
+
   let resultText = "";
   let tokenUsage: TokenUsageLog | undefined;
 
-  // 3. Provider Execution with Fallback
   if (preferredProvider === "openai") {
     try {
-      const res = await generateViaOpenAI({
+      const result = await generateViaOpenAI({
         sellerId: seller.id,
         staticPrompt,
         dynamicMessages,
       });
-      resultText = res.outputText;
-      tokenUsage = res.tokenUsage;
-    } catch (err: any) {
-      console.warn(`[AI Provider Fallback] OpenAI call failed (${err?.message || err}). Falling back to Vertex AI (Gemini)...`);
+      resultText = result.outputText;
+      tokenUsage = result.tokenUsage;
+    } catch (openAIError) {
+      console.warn(`[AI_FALLBACK] OpenAI failed: ${errorMessage(openAIError)}`);
       try {
-        const res = await generateViaVertex({
+        const result = await generateViaVertex({
           sellerId: seller.id,
           staticPrompt,
           dynamicMessages,
         });
-        resultText = res.outputText;
-        tokenUsage = res.tokenUsage;
-      } catch (vertexErr: any) {
-        console.error(`[AI Provider Error] Vertex AI fallback also failed:`, vertexErr);
-        return handoff({ config, userMessage: message });
+        resultText = result.outputText;
+        tokenUsage = result.tokenUsage;
+      } catch (vertexError) {
+        console.error(`[AI_ERROR] All providers failed: ${errorMessage(vertexError)}`);
+        return handoff({
+          config,
+          userMessage: message,
+          latencyMs: Date.now() - startedAt,
+        });
       }
     }
   } else {
-    // Direct Vertex AI path if AI_PROVIDER="vertex"
     try {
-      const res = await generateViaVertex({
+      const result = await generateViaVertex({
         sellerId: seller.id,
         staticPrompt,
         dynamicMessages,
       });
-      resultText = res.outputText;
-      tokenUsage = res.tokenUsage;
-    } catch (err) {
-      console.error(`[AI Provider Error] Vertex AI generation failed:`, err);
-      return handoff({ config, userMessage: message });
+      resultText = result.outputText;
+      tokenUsage = result.tokenUsage;
+    } catch (error) {
+      console.error(`[AI_ERROR] Vertex failed: ${errorMessage(error)}`);
+      return handoff({
+        config,
+        userMessage: message,
+        latencyMs: Date.now() - startedAt,
+      });
     }
   }
 
-  // 4. Parse structured model output
   const parsed = parseModelReply(resultText);
-  if (!parsed || typeof parsed.reply !== "string") {
-    return { ...handoff({ config, userMessage: message }), tokenUsage };
-  }
-
-  const reply = parsed.reply.trim();
-  const supported = parsed.supported === true;
-  const evidenceIds = Array.isArray(parsed.evidence_ids)
-    ? parsed.evidence_ids.filter((id): id is string => typeof id === "string")
+  const intent = INTENTS.includes(parsed?.intent as ReplyIntent)
+    ? (parsed?.intent as ReplyIntent)
+    : inferIntent(message);
+  const reply = typeof parsed?.reply === "string" ? parsed.reply.trim() : "";
+  const allowedIds = new Set(facts.map((fact) => fact.id));
+  const evidenceIds = Array.isArray(parsed?.evidence_ids)
+    ? Array.from(
+        new Set(
+          parsed.evidence_ids.filter(
+            (id): id is string => typeof id === "string" && allowedIds.has(id),
+          ),
+        ),
+      )
     : [];
+  const evidence = evidenceForFacts(facts, evidenceIds);
+  const supported =
+    parsed?.supported === true &&
+    reply.length > 0 &&
+    reply.length <= 900 &&
+    evidenceSupportsIntent(intent, evidence);
 
-  if (!supported || reply.length === 0 || reply.length > 900) {
-    return { ...handoff({ config, userMessage: message }), tokenUsage };
+  if (!supported) {
+    return handoff({
+      config,
+      userMessage: message,
+      tokenUsage,
+      latencyMs: Date.now() - startedAt,
+    });
   }
-
 
   return {
     reply,
     action: "reply",
     evidenceIds,
+    evidence,
+    confidence: confidenceForFacts(facts, evidenceIds),
+    intent,
+    decisionReason: `Grounded in ${evidence.length} verified ${evidence.length === 1 ? "source" : "sources"}.`,
+    latencyMs: Date.now() - startedAt,
     tokenUsage,
   };
 }
