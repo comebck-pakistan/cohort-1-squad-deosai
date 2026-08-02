@@ -46,60 +46,71 @@ export default function Home() {
       <SiteHeader />
 
       <main className="bg-surface text-ink">
-        <section className="relative overflow-hidden bg-surface">
-          <div className="hero-glow" />
-          <div className="mx-auto max-w-7xl px-5 py-24 lg:py-32">
+        <section className="relative overflow-hidden bg-surface pb-12">
+          {/* Animated Background Orbs */}
+          <div className="orb w-[500px] h-[500px] bg-teal-soft top-[-10%] left-[-10%] animate-float" />
+          <div className="orb w-[600px] h-[600px] bg-accent-soft bottom-[-20%] right-[-10%] animate-float-delayed" />
+          
+          <div className="mx-auto max-w-7xl px-5 py-24 lg:py-32 relative z-10">
             <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-3 rounded-full border border-line bg-white/70 px-4 py-2 text-sm text-teal shadow-sm glass-panel">
-                  <Pulse label="Industrial SaaS" />
-                  <span>Trusted by modern operations teams</span>
-                </div>
-                <h1 className="max-w-3xl text-5xl font-display font-semibold tracking-tight text-ink sm:text-6xl">
-                  Enterprise-grade operations intelligence for modern factories.
-                </h1>
-                <p className="max-w-2xl text-lg leading-8 text-ink-soft sm:text-xl">
-                  Deosai gives teams a polished command center for production, maintenance, and customer workflows with real-time AI automation and smart alerts.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  <ButtonLink href="/auth/signup" size="lg" className="bg-teal text-paper hover:bg-teal-bright">
+              <div className="space-y-8">
+                <Reveal delay={0}>
+                  <div className="inline-flex items-center gap-3 rounded-full border border-teal/20 bg-white/70 px-4 py-2 text-sm text-teal shadow-sm glass-panel hover-glow">
+                    <Pulse label="24/7 AI Assistant" tone="live" />
+                    <span className="font-medium">Trusted by top Pakistani sellers</span>
+                  </div>
+                </Reveal>
+                
+                <Reveal delay={100} as="h1" className="max-w-3xl text-5xl font-display font-semibold tracking-tight text-ink sm:text-6xl/tight">
+                  <span className="text-gradient">Never miss a DM again</span>
+                  <br />
+                  your WhatsApp store runs 24/7.
+                </Reveal>
+                
+                <Reveal delay={200} as="p" className="max-w-2xl text-lg leading-8 text-ink-soft sm:text-xl">
+                  Empower your social selling with an AI assistant that instantly answers price inquiries, confirms COD orders, and keeps your operations flowing seamlessly around the clock.
+                </Reveal>
+                
+                <Reveal delay={300} className="flex flex-wrap gap-4">
+                  <ButtonLink href="/auth/signup" size="lg" className="bg-teal text-paper hover:bg-teal-bright shadow-xl shadow-teal/20 hover-glow">
                     Start your pilot
                   </ButtonLink>
-                  <ButtonLink href="/dashboard" size="lg" variant="outline" className="border-teal text-teal hover:bg-teal-soft">
+                  <ButtonLink href="/dashboard" size="lg" variant="outline" className="border-teal text-teal hover:bg-teal-soft hover-glow">
                     View dashboard
                   </ButtonLink>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
+                </Reveal>
+                
+                <Reveal delay={400} className="grid gap-4 sm:grid-cols-3 pt-6">
                   {[
-                    { value: "99.9%", label: "Uptime guarantee" },
-                    { value: "500+", label: "Global deployments" },
-                    { value: "30%", label: "Average efficiency gain" },
+                    { value: "94%", label: "Resolution rate" },
+                    { value: "1.8s", label: "Avg response" },
+                    { value: "24/7", label: "Uptime guarantee" },
                   ].map((item) => (
-                    <div key={item.value} className="rounded-[var(--radius-card)] border border-line bg-white/80 p-4 shadow-sm glass-panel">
+                    <div key={item.value} className="rounded-[var(--radius-card)] border border-white/40 bg-white/60 p-5 shadow-sm glass-panel hover-glow cursor-default transition-all duration-300">
                       <p className="text-3xl font-semibold text-teal">{item.value}</p>
-                      <p className="mt-2 text-sm text-ink-soft">{item.label}</p>
+                      <p className="mt-2 text-sm font-medium text-ink-soft">{item.label}</p>
                     </div>
                   ))}
-                </div>
+                </Reveal>
               </div>
 
-              <div className="relative">
-                <div className="absolute -inset-6 rounded-[2.5rem] bg-accent-soft blur-3xl" />
-                <div className="relative overflow-hidden rounded-[2.25rem] border border-line bg-card glass-card shadow-2xl">
-                  <div className="px-6 py-5 border-b border-line bg-white/85">
+              <Reveal delay={300} className="relative">
+                <div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-tr from-accent-soft to-teal-soft blur-3xl opacity-70 animate-float-delayed" />
+                <div className="relative overflow-hidden rounded-[2.25rem] border border-white/60 bg-card glass-card shadow-2xl transition-transform duration-500 hover:scale-[1.02]">
+                  <div className="px-6 py-5 border-b border-line bg-white/90 backdrop-blur-md">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="text-sm uppercase tracking-[0.35em] text-ink-soft">Live review</p>
-                        <p className="mt-1 text-sm font-semibold text-ink">Production traffic snapshot</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-teal font-semibold">Live Demo</p>
+                        <p className="mt-1 text-sm font-semibold text-ink">WhatsApp interaction</p>
                       </div>
                       <Pulse label="real-time" />
                     </div>
                   </div>
-                  <div className="p-6">
+                  <div className="p-6 bg-[#efeae2]/30">
                     <LiveThread />
                   </div>
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
