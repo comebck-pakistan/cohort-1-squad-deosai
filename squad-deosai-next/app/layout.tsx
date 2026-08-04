@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Manrope, IBM_Plex_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import { PointerGlow } from "@/components/ui/PointerGlow";
 
 const display = Fraunces({
   variable: "--font-fraunces",
@@ -45,6 +46,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="bg-paper text-ink font-sans min-h-full flex flex-col" suppressHydrationWarning>
+        <PointerGlow />
         {children}
       </body>
     </html>
