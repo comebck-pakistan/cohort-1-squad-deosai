@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Input, Label, Select } from "@/components/ui/Field";
 import { useAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import { seedDatabase, clearDatabase } from "@/lib/supabase-service";
 const industries = [
   "Jewellery",
   "Fashion",
@@ -28,6 +30,50 @@ export default function SettingsPage() {
   const [passwordLoading, setPasswordLoading] = useState(false)
   const [passwordMessage, setPasswordMessage] = useState('')
   const [passwordError, setPasswordError] = useState('')
+
+  const [devLoading, setDevLoading] = useState(false);
+  const [devMessage, setDevMessage] = useState("");
+
+  const handleClearDb = async () => {
+    if (!user) return;
+    try {
+      setDevLoading(true);
+      setDevMessage("");
+      await clearDatabase(user.id);
+      setDevMessage("✅ Database tables cleared successfully!");
+    } catch (err) {
+      console.error(err);
+      setDevMessage("❌ Failed to clear database tables.");
+    } finally {
+      setDevLoading(false);
+    }
+  };
+
+  const handleSeedDb = async () => {
+    if (!user) return;
+    try {
+      setDevLoading(true);
+      setDevMessage("");
+      await seedDatabase(user.id);
+      setDevMessage("✅ Database tables seeded with test data successfully!");
+    } catch (err) {
+      console.error(err);
+      setDevMessage("❌ Failed to seed database tables.");
+    } finally {
+      setDevLoading(false);
+    }
+  };
+
+  const handleGrantAdmin = () => {
+    if (!user) return;
+    try {
+      localStorage.setItem(`role_${user.id}`, "admin");
+      setDevMessage("✅ Admin privileges granted locally! You can now visit /admin.");
+    } catch (err) {
+      console.error(err);
+      setDevMessage("❌ Failed to grant admin privileges.");
+    }
+  };
 
   const [profile, setProfile] = useState({
     businessName: "",
@@ -164,14 +210,14 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
+    <div className="font-landing">
       <PageHeader
         title="Settings"
         description="Your account and business profile."
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 bg-card-strong">
           <CardHeader
             title="Business profile"
             action={saved ? <Badge tone="live">Saved</Badge> : undefined}
@@ -211,61 +257,7 @@ export default function SettingsPage() {
                 onChange={(e) => update("email", e.target.value)}
               />
             </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="s-web">Website</Label>
-              <Input
-                id="s-web"
-                value={profile.website}
-                onChange={(e) => update("website", e.target.value)}
-                placeholder="https://myjewellerybrand.com"
-              />
-            </div>
-            <div>
-              <Label htmlFor="s-ind">Industry</Label>
-              <Select
-                id="s-ind"
-                value={profile.industry}
-                onChange={(e) => update("industry", e.target.value)}
-              >
-                <option value="">Select industry</option>
-                {industries.map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="s-size">Company Size</Label>
-              <Select
-                id="s-size"
-                value={profile.companySize}
-                onChange={(e) => update("companySize", e.target.value)}
-              >
-                <option value="">Select size</option>
-                {companySizes.map((size) => (
-                  <option key={size} value={size}>
-                    {size}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="s-role">What best describes you?</Label>
-              <Select
-                id="s-role"
-                value={profile.roleDescription}
-                onChange={(e) => update("roleDescription", e.target.value)}
-              >
-                <option value="">Select role</option>
-                <option value="Owner / Founder">Owner / Founder</option>
-                <option value="Store Manager">Store Manager</option>
-                <option value="Customer Support Lead">Customer Support Lead</option>
-                <option value="Marketing Specialist">Marketing Specialist</option>
-                <option value="Developer / Tech Lead">Developer / Tech Lead</option>
-                <option value="Others">Others</option>
-              </Select>
-            </div>
+
             <div className="sm:col-span-2">
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? "Saving…" : "Save changes"}
@@ -274,7 +266,7 @@ export default function SettingsPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        <Card className="bg-card-strong">
           <CardHeader title="Plan" />
           <CardBody className="pt-4">
             <Badge tone="marigold">{user?.plan ?? "Early Access"}</Badge>
@@ -285,7 +277,7 @@ export default function SettingsPage() {
             <hr className="my-5 border-line" />
             <button
               onClick={signOut}
-              className="text-sm font-medium text-danger hover:underline"
+              className="text-sm font-semibold text-danger hover:underline"
             >
               Sign out
             </button>
@@ -293,7 +285,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Change Password */}
-        <Card className="lg:col-span-2">
+        <Card className="lg:col-span-2 bg-card-strong">
           <CardHeader title="Change Password" />
           <CardBody className="pt-4">
             <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
@@ -333,7 +325,48 @@ export default function SettingsPage() {
             </form>
           </CardBody>
         </Card>
+
+        {/* Developer & Demo Database Controls */}
+        <Card className="lg:col-span-2 bg-card-strong">
+          <CardHeader title="Developer & Demo Database Controls" />
+          <CardBody className="pt-4 space-y-4">
+            <p className="text-xs text-ink-soft">
+              Use these buttons to easily populate or reset your Supabase database tables (<code className="font-mono bg-paper px-1 py-0.5 rounded">conversations</code>, <code className="font-mono bg-paper px-1 py-0.5 rounded">messages</code>, and <code className="font-mono bg-paper px-1 py-0.5 rounded">orders</code>) to demonstrate different states during pitches or testing.
+            </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button 
+                onClick={handleClearDb} 
+                disabled={devLoading}
+                className="bg-danger hover:bg-danger/95 text-white px-4 py-2 text-xs"
+              >
+                {devLoading ? "Processing..." : "Clear Live Database Data"}
+              </Button>
+              <Button 
+                onClick={handleSeedDb} 
+                disabled={devLoading}
+                className="bg-teal hover:bg-teal-bright text-white px-4 py-2 text-xs"
+              >
+                {devLoading ? "Processing..." : "Seed Database with Test Data"}
+              </Button>
+              <Button 
+                onClick={handleGrantAdmin}
+                className="bg-[#8a5a12] hover:bg-[#8a5a12]/95 text-white px-4 py-2 text-xs"
+              >
+                Grant Admin Role (Local)
+              </Button>
+              <Link
+                href="/admin"
+                className="inline-flex items-center justify-center rounded-xl border border-line bg-card px-4 py-2 text-xs font-semibold text-ink shadow transition-all hover:bg-paper"
+              >
+                Visit Admin Dashboard →
+              </Link>
+            </div>
+            {devMessage && (
+              <p className="text-xs font-semibold text-success mt-2">{devMessage}</p>
+            )}
+          </CardBody>
+        </Card>
       </div>
-    </>
+    </div>
   );
 }

@@ -37,6 +37,7 @@
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --radius-card: 1.75rem;
+  --font-plus-jakarta-sans: var(--font-plus-jakarta-sans);
 }
 
 /* Base */
@@ -173,92 +174,79 @@ select,
 }
 
 /* ============================================================
-   Added Animations & Utilities
+   Custom styles copied and customized from reference deskops-ai
    ============================================================ */
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) scale(1);
-  }
-  50% {
-    transform: translateY(-20px) scale(1.05);
-  }
+.font-landing {
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif !important;
+}
+.font-landing h1, .font-landing h2, .font-landing h3, .font-landing h4, .font-landing h5, .font-landing h6, .font-landing p, .font-landing span, .font-landing button, .font-landing a {
+  font-family: var(--font-plus-jakarta-sans), system-ui, sans-serif !important;
+}
+.font-landing h1, .font-landing h2, .font-landing h3, .font-landing h4, .font-landing h5, .font-landing h6 {
+  font-weight: 700 !important;
 }
 
-.animate-float {
-  animation: float 8s ease-in-out infinite;
+/* Primary CTA — teal-bright gradient + noise overlay + layered glow */
+.btn-purple {
+  border-radius: 9999px;
+  color: #fff;
+  background-image:
+    url("/textures/noise.png"),
+    linear-gradient(90deg, var(--color-teal), var(--color-teal-bright));
+  background-size: cover, cover;
+  box-shadow:
+    rgba(0, 167, 199, 0.4) 0px 2.77px 3.51px 0px,
+    rgba(0, 167, 199, 0.286) 0px 6.65px 8.45px 0px,
+    rgba(0, 167, 199, 0.24) 0px 12.52px 15.9px 0px,
+    rgba(255, 255, 255, 0.25) 0px 2px 0px 0px inset,
+    rgba(0, 0, 0, 0.25) 0px -2px 0px 0px inset;
+  transition: all 0.1s ease;
+}
+.btn-purple:hover {
+  background-image:
+    url("/textures/noise.png"),
+    linear-gradient(90deg, var(--color-teal-bright), var(--color-accent));
 }
 
-.animate-float-delayed {
-  animation: float 10s ease-in-out infinite;
-  animation-delay: 2s;
+/* Secondary CTA — dark navy + noise */
+.btn-dark {
+  border-radius: 9999px;
+  color: #fff;
+  background-image:
+    url("/textures/noise.png"),
+    linear-gradient(180deg, #1e293b, var(--color-ink));
+  background-size: cover, cover;
+  box-shadow:
+    rgba(15, 23, 42, 0.35) 0px 4px 10px 0px,
+    rgba(255, 255, 255, 0.18) 0px 2px 0px 0px inset,
+    rgba(0, 0, 0, 0.35) 0px -2px 0px 0px inset;
+  transition: all 0.1s ease;
+}
+.btn-dark:hover {
+  background-image:
+    url("/textures/noise.png"),
+    linear-gradient(180deg, #334155, #0f172a);
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: 200% center;
-  }
-  100% {
-    background-position: -200% center;
-  }
+/* Dark band sections (CTA / footer) — flat dark + noise, no gradients */
+.surface-dark {
+  background-color: #020617;
+  background-image: linear-gradient(180deg, #0f172a 0%, #020617 100%);
 }
 
-.text-gradient {
-  background: linear-gradient(
-    to right,
-    var(--color-ink) 20%,
-    var(--color-teal-bright) 40%,
-    var(--color-teal-bright) 60%,
-    var(--color-ink) 80%
-  );
-  background-size: 200% auto;
+/* Faint blueprint grid used on light sections */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+}
+
+/* Awwwards-style outlined display text */
+.text-outline {
   color: transparent;
-  background-clip: text;
-  -webkit-background-clip: text;
-  animation: shimmer 6s linear infinite;
+  -webkit-text-stroke: 2px rgba(15, 23, 42, 0.22);
 }
 
-.nav-link {
-  position: relative;
-  display: inline-block;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  width: 100%;
-  transform: scaleX(0);
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: var(--color-teal-bright);
-  transform-origin: bottom right;
-  transition: transform 0.3s cubic-bezier(0.86, 0, 0.07, 1);
-}
-
-.nav-link:hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
-}
-
-.hover-glow {
-  transition: all 0.3s ease;
-}
-
-.hover-glow:hover {
-  box-shadow: 0 0 25px rgba(0, 167, 199, 0.4);
-  transform: translateY(-2px);
-  border-color: var(--color-teal-bright);
-}
-
-.pointer-glow {
-  will-change: transform, opacity;
-}
-
-.orb {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  z-index: -1;
-  opacity: 0.6;
-}

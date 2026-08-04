@@ -1,0 +1,152 @@
+{
+  "product": {
+    "name": "The Social-Commerce Support Agent",
+    "squad": "Squad Deosai",
+    "program": "Comebck Pakistan — Cohort 1 Product Challenge",
+    "targetUser": "A Pakistani social seller running a fashion or jewellery shop on Instagram or WhatsApp, managing every customer DM alone, with little to no team and no automation.",
+    "coreProblem": "Repetitive DM questions (price, delivery, availability, return policy) eat 30 minutes to 2 hours a day, messages go unanswered after hours, and sellers waste time chasing COD orders that get ghosted on delivery day.",
+    "wedge": "An Instagram/WhatsApp DM AI tool that answers the five most common customer questions (price, delivery, availability, returns, hours) using the seller's own catalogue and policies, and auto-sends a COD confirmation message when an order is placed.",
+    "fiveQuestions": ["Price", "Delivery", "Availability", "Return Policy", "Business Hours"]
+  },
+  "survey": {
+    "respondents": 12,
+    "collectionWindow": "June 27–29, 2026",
+    "channel": [
+      { "label": "Instagram", "count": 5 },
+      { "label": "WhatsApp", "count": 4 },
+      { "label": "Multiple platforms", "count": 3 }
+    ],
+    "dailyInquiryVolume": [
+      { "label": "Less than 10", "count": 7 },
+      { "label": "10–25", "count": 3 },
+      { "label": "25–50", "count": 1 },
+      { "label": "50–100", "count": 1 }
+    ],
+    "timeSpentDailyReplying": [
+      { "label": "< 30 min", "count": 4 },
+      { "label": "30 min – 1 hr", "count": 5 },
+      { "label": "1–2 hrs", "count": 2 },
+      { "label": "2–4 hrs", "count": 1 }
+    ],
+    "lostSaleFromSlowReply": [
+      { "label": "Rarely", "count": 7 },
+      { "label": "Sometimes", "count": 3 },
+      { "label": "Never", "count": 2 }
+    ],
+    "lostSaleAtLeastOccasionally": { "count": 10, "total": 12, "pct": 83 },
+    "handleMessagesThemselves": { "count": 11, "total": 12, "pct": 92 },
+    "questionCombinations": [
+      { "label": "Product price (alone)", "count": 3 },
+      { "label": "Product price + delivery charges + product details", "count": 3 },
+      { "label": "Product price + availability + delivery charges", "count": 2 },
+      { "label": "Product price + availability + delivery charges + delivery time + order tracking + returns", "count": 1 },
+      { "label": "Product price + delivery time + order tracking + returns", "count": 1 },
+      { "label": "Product price + availability + delivery charges + order tracking", "count": 1 },
+      { "label": "Product details (alone)", "count": 1 }
+    ],
+    "perceivedUsefulness": [
+      { "label": "Extremely useful", "count": 3 },
+      { "label": "Very useful", "count": 5 },
+      { "label": "Somewhat useful", "count": 3 },
+      { "label": "Not useful", "count": 1 }
+    ],
+    "usefulPct": 67,
+    "firstAutomationPriority": [
+      { "label": "Product Questions", "count": 8 },
+      { "label": "COD Confirmation", "count": 1 },
+      { "label": "Stock Availability", "count": 1 },
+      { "label": "Delivery Information", "count": 1 },
+      { "label": "Returns & Exchanges", "count": 1 }
+    ],
+    "willingnessToPayIfTimeCut50pct": [
+      { "label": "Definitely", "count": 3 },
+      { "label": "Maybe", "count": 7 },
+      { "label": "Unlikely", "count": 1 },
+      { "label": "No", "count": 1 }
+    ],
+    "openToPayingPct": 83,
+    "pricePoint": [
+      { "label": "< Rs. 500", "count": 3 },
+      { "label": "Rs. 500–1,000", "count": 7 },
+      { "label": "Rs. 2,500–5,000", "count": 2 }
+    ],
+    "modalPrice": "Rs. 500–1,000/month",
+    "earlyTestingInterest": [
+      { "label": "Yes", "count": 4 },
+      { "label": "Maybe", "count": 8 }
+    ]
+  },
+  "interviews": [
+    {
+      "business": "StickerMania",
+      "contact": "Khadija Qureshi",
+      "channels": ["Instagram", "WhatsApp", "Facebook", "Daraz"],
+      "productType": "catalogue-driven",
+      "replyTime": "1–2 days",
+      "lostSale": true,
+      "lostSaleDetail": "Lost 2 customers after missing an Instagram DM notification.",
+      "firstAutomationChoice": "Pricing responses",
+      "earlyAccess": "confirmed",
+      "quote": "Price DMs sometimes crowd out DMs from customers actually ready to order.",
+      "takeaway": "Clearest signal in the batch — a validated missed-notification lost sale, plus explicit testing interest."
+    },
+    {
+      "business": "AP Crafts",
+      "contact": "Eemaan Syed",
+      "channels": ["Instagram", "WhatsApp"],
+      "productType": "custom/bespoke",
+      "replyTime": null,
+      "lostSale": false,
+      "lostSaleDetail": null,
+      "firstAutomationChoice": "Skeptical — prefers narrower closed-hours/policy responder",
+      "earlyAccess": "maybe",
+      "quote": "A bot can't negotiate a one-off custom order the way a human can.",
+      "takeaway": "Clearest counter-signal — custom/bespoke sellers are a weaker fit for the full five-question assistant."
+    },
+    {
+      "business": "Jewellery with Maheen",
+      "contact": "jewellerywith_maheen",
+      "channels": ["Instagram"],
+      "productType": "made-to-order",
+      "replyTime": "~1 hour",
+      "lostSale": false,
+      "lostSaleDetail": "Zero lost sales in 4 years, 50+ parcels dispatched.",
+      "firstAutomationChoice": "FAQs, product details, availability, closed-hours messaging",
+      "earlyAccess": "confirmed",
+      "quote": "Really needed.",
+      "takeaway": "Strongest positive data point — fast reply time correlates with zero lost sales."
+    },
+    {
+      "business": "ZayZaiwar",
+      "contact": "Shamoon",
+      "channels": ["Instagram", "Facebook Business Manager"],
+      "productType": "catalogue-driven (jewellery line, paused)",
+      "replyTime": "30 min – 1 hr",
+      "lostSale": false,
+      "lostSaleDetail": null,
+      "firstAutomationChoice": "Availability / product-lookup",
+      "earlyAccess": "open to future contact",
+      "quote": "Managing a large audience really needs multiple people, not just better manual tools.",
+      "takeaway": "Independently confirms availability/product-lookup as the top automation priority; surfaces a headcount-scaling insight."
+    }
+  ],
+  "benchmarks": {
+    "uniqueSellersEngaged": 15,
+    "surveyResponses": 12,
+    "interviewsDocumented": 4,
+    "lostSalePct": 83,
+    "usefulPct": 67,
+    "firstPriorityProductQuestionsPct": 67,
+    "openToPayingPct": 83,
+    "modalPrice": "Rs. 500–1,000/month",
+    "openToTestingPct": 100,
+    "confirmedTesters": 6,
+    "largestSellerReferenced": "400–500 orders/day, fully manual, no after-hours support"
+  },
+  "waitlist": [
+    { "contact": "Khadija Qureshi", "business": "Stickersmania", "status": "Confirmed — will test" },
+    { "contact": "jewellerywith_maheen", "business": "Jewellery with Maheen", "status": "Confirmed — will test" },
+    { "contact": "Shamoon", "business": "ZayZaiwar", "status": "Open to future contact" },
+    { "contact": "Eemaan Syed", "business": "AP Crafts", "status": "Maybe (per survey)" }
+  ]
+}

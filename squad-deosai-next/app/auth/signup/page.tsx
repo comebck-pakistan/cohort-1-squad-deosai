@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/components/ui/Logo'
+import { AuthShell } from '@/components/auth/AuthShell'
 import { Button } from '@/components/ui/Button'
 import { Input, Label } from '@/components/ui/Field'
 
@@ -70,35 +70,19 @@ export default function SignupPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-16">
-            {/* Decorative blurs — mirrors the landing-page hero aesthetic */}
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-teal-soft blur-3xl opacity-50"
-            />
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-marigold-soft blur-3xl opacity-60"
-            />
-
-            <div className="relative z-10 w-full max-w-md space-y-8">
-                {/* Logo */}
-                <div className="flex flex-col items-center gap-4">
-                    <Link href="/" aria-label="Back to home">
-                        <Logo />
-                    </Link>
-                    <div className="text-center">
-                        <h1 className="font-display text-3xl tracking-tight text-ink">
-                            Create your account
-                        </h1>
-                        <p className="mt-2 text-sm text-ink-soft">
-                            Start automating your store in minutes
-                        </p>
-                    </div>
+        <AuthShell>
+            <div className="space-y-8">
+                <div data-auth="header" className="text-center">
+                    <h1 className="font-heading text-3xl font-bold tracking-tight text-ink">
+                        Create your account
+                    </h1>
+                    <p className="mt-2 text-sm text-ink-soft">
+                        Start automating your store in minutes
+                    </p>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
+                <div data-auth="panel" className="rounded-[var(--radius-card)] border border-line bg-card-strong p-8 shadow-sm">
                     <form className="space-y-5" onSubmit={handleSignup}>
                         {error && (
                             <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -166,16 +150,18 @@ export default function SignupPage() {
                 </div>
 
                 {/* Footer link */}
-                <p className="text-center text-sm text-ink-soft">
-                    Already have an account?{' '}
-                    <Link
-                        href="/auth/login"
-                        className="font-medium text-teal transition-colors hover:text-teal-bright"
-                    >
-                        Sign in
-                    </Link>
-                </p>
+                <div data-auth="footer" className="text-center">
+                    <p className="text-sm text-ink-soft">
+                        Already have an account?{' '}
+                        <Link
+                            href="/auth/login"
+                            className="font-medium text-teal transition-colors hover:text-teal-bright"
+                        >
+                            Sign in
+                        </Link>
+                    </p>
+                </div>
             </div>
-        </div>
+        </AuthShell>
     )
 }

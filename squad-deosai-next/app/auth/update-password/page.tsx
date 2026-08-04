@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/components/ui/Logo'
+import { AuthShell } from '@/components/auth/AuthShell'
 import { Button } from '@/components/ui/Button'
 import { Input, Label } from '@/components/ui/Field'
 
@@ -47,32 +47,18 @@ export default function UpdatePasswordPage() {
     }
 
     return (
-        <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-paper px-5 py-16">
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-teal-soft blur-3xl opacity-50"
-            />
-            <div
-                aria-hidden
-                className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-marigold-soft blur-3xl opacity-60"
-            />
-
-            <div className="relative z-10 w-full max-w-md space-y-8">
-                <div className="flex flex-col items-center gap-4">
-                    <Link href="/" aria-label="Back to home">
-                        <Logo />
-                    </Link>
-                    <div className="text-center">
-                        <h1 className="font-display text-3xl tracking-tight text-ink">
-                            Update Password
-                        </h1>
-                        <p className="mt-2 text-sm text-ink-soft">
-                            Enter your new password below.
-                        </p>
-                    </div>
+        <AuthShell>
+            <div className="space-y-8">
+                <div data-auth="header" className="text-center">
+                    <h1 className="font-heading text-3xl font-bold tracking-tight text-ink">
+                        Update Password
+                    </h1>
+                    <p className="mt-2 text-sm text-ink-soft">
+                        Enter your new password below.
+                    </p>
                 </div>
 
-                <div className="rounded-[var(--radius-card)] border border-line bg-card p-8 shadow-sm">
+                <div data-auth="panel" className="rounded-[var(--radius-card)] border border-line bg-card-strong p-8 shadow-sm">
                     <form onSubmit={handleUpdate} className="space-y-5">
                         {error && (
                             <div className="rounded-xl border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -106,6 +92,6 @@ export default function UpdatePasswordPage() {
                     </form>
                 </div>
             </div>
-        </div>
+        </AuthShell>
     )
 }

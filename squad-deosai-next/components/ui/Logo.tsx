@@ -19,7 +19,7 @@ export function Logo({
       </span>
       {showText ? (
         <span className="font-display text-lg font-semibold tracking-tight text-ink">
-          Deosai
+          Jawab AI
         </span>
       ) : null}
     </span>

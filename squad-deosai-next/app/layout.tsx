@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Manrope, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Manrope, IBM_Plex_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { PointerGlow } from "@/components/ui/PointerGlow";
 
@@ -15,6 +15,12 @@ const sans = Manrope({
   display: "swap",
 });
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta-sans",
+  subsets: ["latin"],
+  display: "swap",
+});
+
 const mono = IBM_Plex_Mono({
   variable: "--font-plex-mono",
   weight: ["400", "500", "600"],
@@ -23,7 +29,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Deosai — never miss a DM again",
+  title: "Jawab AI — never miss a DM again",
   description:
     "A WhatsApp assistant for Pakistani social sellers. It answers price, delivery, availability, returns and hours from your own catalogue, and confirms COD orders automatically — even at 3 AM.",
 };
@@ -36,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${sans.variable} ${mono.variable} h-full antialiased`}
+      className={`${display.variable} ${sans.variable} ${mono.variable} ${plusJakartaSans.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-paper text-ink font-sans min-h-full flex flex-col" suppressHydrationWarning>

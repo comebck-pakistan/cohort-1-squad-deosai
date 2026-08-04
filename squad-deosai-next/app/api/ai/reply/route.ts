@@ -23,7 +23,11 @@ const DEFAULT_CONFIG: Omit<AgentConfigRow, "seller_id"> = {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { message?: unknown };
+    const body = (await request.json()) as { 
+      message?: unknown;
+      configOverride?: Partial<AgentConfigRow>;
+      onboardingOverride?: any;
+    };
     const message = typeof body.message === "string" ? body.message.trim() : "";
 
     if (!message || message.length > 1200) {
@@ -90,34 +94,38 @@ export async function POST(request: Request) {
       : null;
 
     let compiledPolicies = "";
-    if (obItem) {
+    let agentName = "";
+    let whatsappNumber = "";
+
+    const obData = body.onboardingOverride || (obItem ? JSON.parse(obItem.content) : null);
+    if (obData) {
       try {
-        const obData = JSON.parse(obItem.content);
         compiledPolicies = [
           obData.deliveryCharges ? `Delivery charges: ${obData.deliveryCharges}` : "",
           obData.deliveryTime ? `Delivery time: ${obData.deliveryTime}` : "",
           obData.returnPolicy ? `Return policy: ${obData.returnPolicy}` : "",
         ].filter(Boolean).join(" | ");
+        agentName = obData.agentName || "";
+        whatsappNumber = obData.whatsappNumber || "";
       } catch {}
     }
 
-    const seller: SellerRow = {
+    const seller: SellerRow & { policies?: string; agent_name?: string; whatsapp_number?: string } = {
       ...sellerData,
+      business_name: body.onboardingOverride?.businessName || sellerData.business_name,
+      industry: body.onboardingOverride?.category || sellerData.industry,
       policies: compiledPolicies,
+      agent_name: agentName,
+      whatsapp_number: whatsappNumber,
     } as any;
 
-    const config: AgentConfigRow = remoteConfig
-      ? {
-          ...DEFAULT_CONFIG,
-          ...remoteConfig,
-          knowledge_items: Array.isArray(remoteConfig.knowledge_items)
-            ? (remoteConfig.knowledge_items as KnowledgeItem[])
-            : [],
-          tone_guidelines: Array.isArray(remoteConfig.tone_guidelines)
-            ? remoteConfig.tone_guidelines
-            : DEFAULT_CONFIG.tone_guidelines,
-        }
-      : { seller_id: user.id, ...DEFAULT_CONFIG };
+    const baseConfig = remoteConfig || { seller_id: user.id, ...DEFAULT_CONFIG };
+    const config: AgentConfigRow = {
+      ...baseConfig,
+      ...(body.configOverride || {}),
+      knowledge_items: body.configOverride?.knowledge_items || (Array.isArray(baseConfig.knowledge_items) ? baseConfig.knowledge_items : []),
+      tone_guidelines: body.configOverride?.tone_guidelines || (Array.isArray(baseConfig.tone_guidelines) ? baseConfig.tone_guidelines : DEFAULT_CONFIG.tone_guidelines),
+    } as any;
       
     // If Supabase ilike query returned products, use them. 
     // Otherwise fallback to fetching 20 latest products for general queries.

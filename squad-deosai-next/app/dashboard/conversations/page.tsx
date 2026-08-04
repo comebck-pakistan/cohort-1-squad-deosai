@@ -7,7 +7,7 @@ export default function ConversationsRedirectPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/dashboard/activity");
+    router.replace("/dashboard/inbox");
   }, [router]);
 
   return (

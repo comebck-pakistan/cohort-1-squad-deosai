@@ -40,7 +40,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       : pathname.startsWith(href);
 
   const navList = (
-    <nav className="flex flex-col gap-1">
+    <nav className="flex flex-col gap-1.5">
       {navItems.map((item) => (
         <Link
           key={item.href}
@@ -48,10 +48,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           onClick={() => setMobileOpen(false)}
           aria-current={isActive(item.href) ? "page" : undefined}
           className={cn(
-            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150",
             isActive(item.href)
-              ? "bg-teal text-paper"
-              : "text-ink-soft hover:bg-teal-soft hover:text-teal"
+              ? "bg-gradient-to-r from-teal-bright to-accent text-white shadow-md shadow-teal-bright/10"
+              : "text-ink-soft hover:bg-paper-deep hover:text-ink"
           )}
         >
           {item.icon}
@@ -62,30 +62,41 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-paper">
+    <div className="flex h-screen overflow-hidden bg-paper font-landing text-ink">
       {/* desktop sidebar */}
-      <aside className="hidden w-64 flex-none flex-col border-r border-line bg-card/95 p-4 glass-card lg:flex">
+      <aside className="hidden w-64 flex-none flex-col bg-card-strong border-r border-line p-4 lg:flex">
         <div className="px-2 py-2">
           <Link href="/">
             <Logo />
           </Link>
         </div>
-        <div className="mt-4 rounded-3xl border border-line bg-white/85 px-4 py-3 shadow-sm">
-          <p className="truncate text-sm font-semibold text-ink">{user.businessName}</p>
-          <Pulse label="connected" tone="live" className="mt-2" />
+        <div className="mt-4 rounded-3xl border border-line bg-paper px-4 py-3 shadow-sm">
+          <p className="truncate text-sm font-bold text-ink">{user.businessName}</p>
+          <Pulse label="connected" tone="live" className="mt-2 text-ink-soft" />
         </div>
         <div className="mt-6">{navList}</div>
         <button
           onClick={signOut}
-          className="mt-auto rounded-3xl px-3 py-2.5 text-left text-sm text-ink-soft transition-colors hover:bg-paper-deep hover:text-danger"
+          className="mt-auto rounded-3xl px-3 py-2.5 text-left text-sm text-ink-faint transition-colors hover:bg-paper-deep hover:text-danger"
         >
           Sign out
         </button>
       </aside>
 
       {/* mobile top bar */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-3 border-b border-line bg-card/95 px-4 py-3 shadow-sm lg:hidden">
+      <div className="flex min-w-0 flex-1 flex-col relative bg-paper overflow-hidden">
+        {/* Decorative background grid & blurs */}
+        <div className="bg-grid absolute inset-0 opacity-40 pointer-events-none" aria-hidden />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-accent-soft blur-3xl opacity-30"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-teal-soft blur-3xl opacity-20"
+        />
+
+        <div className="flex items-center gap-3 border-b border-line bg-card-strong/95 px-4 py-3 shadow-sm lg:hidden relative z-20">
           <button
             aria-label="Open menu"
             aria-expanded={mobileOpen}
@@ -104,8 +115,26 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {mobileOpen ? (
-          <div className="border-b border-line bg-card/95 px-4 py-3 lg:hidden">
-            {navList}
+          <div className="border-b border-line bg-card-strong/95 px-4 py-3 lg:hidden relative z-20 font-landing">
+            <nav className="flex flex-col gap-1.5">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileOpen(false)}
+                  aria-current={isActive(item.href) ? "page" : undefined}
+                  className={cn(
+                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    isActive(item.href)
+                      ? "bg-teal text-white font-semibold"
+                      : "text-ink-soft hover:bg-teal-soft hover:text-teal"
+                  )}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
             <button
               onClick={signOut}
               className="mt-2 w-full rounded-3xl px-3 py-2.5 text-left text-sm text-ink-soft hover:text-danger"
@@ -115,7 +144,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         ) : null}
 
-        <main className="min-w-0 flex-1 p-5 sm:p-8">{children}</main>
+        <main className="min-w-0 flex-1 p-5 sm:p-8 relative z-10 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );

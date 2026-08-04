@@ -36,8 +36,8 @@ export const navItems: NavItem[] = [
     ),
   },
   {
-    href: "/dashboard/activity",
-    label: "Activity",
+    href: "/dashboard/inbox",
+    label: "Inbox",
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
         <path d="M5 5h14v10H8l-3 3z" />
@@ -55,15 +55,7 @@ export const navItems: NavItem[] = [
       </svg>
     ),
   },
-  {
-    href: "/dashboard/whatsapp",
-    label: "WhatsApp",
-    icon: (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" {...stroke}>
-        <path d="M4 20l1.4-4A7.5 7.5 0 1 1 8 18.6L4 20z" />
-      </svg>
-    ),
-  },
+
   {
     href: "/dashboard/settings",
     label: "Settings",

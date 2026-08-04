@@ -10,7 +10,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "bg-card border border-line rounded-[var(--radius-card)]",
+        "bg-card-strong border border-line rounded-[var(--radius-card)]",
         className
       )}
     >

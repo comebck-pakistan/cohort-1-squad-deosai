@@ -95,6 +95,10 @@ export default function SetupPage() {
   const [whatsappRequested, setWhatsappRequested] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
 
+  const visibleKnowledgeList = knowledgeList.filter(
+    (k) => k.id !== "k_onboarding_profile" && k.id !== "k_products_table"
+  );
+
   // Interactive Playground States
   const [playgroundMessages, setPlaygroundMessages] = useState<
     { id: string; sender: "user" | "bot"; text: string }[]
@@ -241,7 +245,9 @@ export default function SetupPage() {
     overrideTone?: string[],
     promptOverride?: string,
     neverDoOverride?: string,
-    memoryOverride?: string
+    memoryOverride?: string,
+    concisenessOverride?: string,
+    hinglishOverride?: boolean
   ) => {
     if (!user) return;
     setSavingConfig(true);
@@ -255,8 +261,8 @@ export default function SetupPage() {
         agent_memory: memoryOverride !== undefined ? memoryOverride : agentMemory,
         knowledge_items: listToSave,
         tone_guidelines: overrideTone || toneGuidelines,
-        conciseness,
-        hinglish_support: hinglishSupport,
+        conciseness: concisenessOverride !== undefined ? concisenessOverride : conciseness,
+        hinglish_support: hinglishOverride !== undefined ? hinglishOverride : hinglishSupport,
         shopify_connected: shopifyConnected,
         cod_auto_confirm: codAutoConfirm,
         updated_at: new Date().toISOString(),
@@ -717,6 +723,16 @@ export default function SetupPage() {
         body: JSON.stringify({
           message: userMsg,
           history: newHistory,
+          onboardingOverride: onboardingData,
+          configOverride: {
+            agent_prompt: agentPrompt,
+            agent_never_do: agentNeverDo,
+            agent_memory: agentMemory,
+            knowledge_items: knowledgeList,
+            tone_guidelines: toneGuidelines,
+            conciseness,
+            hinglish_support: hinglishSupport,
+          }
         }),
       });
 
@@ -748,945 +764,923 @@ export default function SetupPage() {
   }
 
   return (
-    <div className="grid h-[calc(100vh-6.5rem)] grid-cols-1 overflow-hidden lg:grid-cols-[15rem_1fr_22rem]">
-      {/* 1. Left Navigation Sidebar */}
-      <aside className="border-r border-line bg-card flex flex-col p-4 justify-between select-none">
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 px-1">
-            <span className="grid h-7 w-7 place-items-center rounded-lg bg-teal text-base text-paper font-display">
-              🤖
-            </span>
-            <div>
-              <p className="text-xs font-semibold text-ink line-clamp-1">AI Agent Setup</p>
-              <p className="text-[10px] text-ink-faint">Violet from Deosai</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <p className="px-2 text-[10px] font-mono uppercase tracking-wider text-ink-faint">
-                Setup steps
-              </p>
-              <nav className="mt-1.5 flex flex-col gap-1">
-                {(
-                  [
-                    ["onboarding", "Onboarding Profile", "👤"],
-                    ["tasks", "Tasks & Rules", "📋"],
-                    ["knowledge", "Knowledge & Data", "📂"],
-                    ["tone", "Tone & Voice", "🗣️"],
-                    ["tools", "Tools & Actions", "🛠️"],
-                  ] as const
-                ).map(([key, label, icon]) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setActiveTab(key);
-                      setShowAddKnowledgeDropdown(false);
-                    }}
-                    className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all text-left",
-                      activeTab === key
-                        ? "bg-teal text-paper shadow-sm"
-                        : "text-ink-soft hover:bg-teal-soft hover:text-teal"
-                    )}
-                  >
-                    <span>{icon}</span>
-                    <span>{label}</span>
-                  </button>
-                ))}
-              </nav>
-            </div>
-
-            <div>
-              <p className="px-2 text-[10px] font-mono uppercase tracking-wider text-ink-faint">
-                Go Live
-              </p>
-              <nav className="mt-1.5 flex flex-col gap-1">
-                <button
-                  onClick={() => {
-                    setActiveTab("whatsapp");
-                    setShowAddKnowledgeDropdown(false);
-                  }}
-                  className={cn(
-                    "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-all text-left",
-                    activeTab === "whatsapp"
-                      ? "bg-teal text-paper shadow-sm"
-                      : "text-ink-soft hover:bg-teal-soft hover:text-teal"
-                  )}
-                >
-                  <span>💬</span>
-                  <span>WhatsApp Coexist</span>
-                </button>
-              </nav>
-            </div>
-          </div>
+    <div className="font-landing space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-ink font-heading">AI Agent Setup</h1>
+          <p className="mt-1 text-sm text-ink-soft">
+            Configure Onboarding Profile, Tasks & Rules, Knowledge Data, and WhatsApp settings.
+          </p>
         </div>
-
-        <div className="space-y-2 border-t border-line pt-4">
-          <p className="px-2 text-[9px] text-ink-faint">Model status: Ready</p>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft px-2.5 py-1 text-xs font-semibold text-teal shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-live animate-pulse" />
+            Model Status: Ready
+          </span>
         </div>
-      </aside>
+      </div>
 
-      {/* 2. Main Configuration Pane */}
-      <main className="overflow-y-auto bg-paper px-6 py-6 border-r border-line">
-        {activeTab === "onboarding" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">Onboarding Data</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Data collected during your initial onboarding setup. Edit below to keep your profile updated.
-              </p>
-            </div>
+      {/* Horizontal Tabs */}
+      <div className="flex flex-wrap gap-1.5 border-b border-line pb-4">
+        {(
+          [
+            ["onboarding", "Onboarding Profile", "👤"],
+            ["tasks", "Tasks & Rules", "📋"],
+            ["knowledge", "Knowledge & Data", "📂"],
+            ["tone", "Tone & Voice", "🗣️"],
+            ["tools", "Tools & Actions", "🛠️"],
+            ["whatsapp", "WhatsApp Coexist", "💬"],
+          ] as const
+        ).map(([key, label, icon]) => (
+          <button
+            key={key}
+            onClick={() => {
+              setActiveTab(key);
+              setShowAddKnowledgeDropdown(false);
+            }}
+            className={cn(
+              "flex items-center gap-2.5 rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-150",
+              activeTab === key
+                ? "bg-gradient-to-r from-teal-bright to-accent text-white shadow-sm"
+                : "bg-card-strong border border-line text-ink-soft hover:border-teal hover:text-teal"
+            )}
+          >
+            <span>{icon}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
 
-            <Card>
-              <CardBody className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <Label htmlFor="ob-business-name">Business Name</Label>
-                    <Input
-                      id="ob-business-name"
-                      value={onboardingData?.businessName || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, businessName: e.target.value })}
-                      placeholder="e.g. Glam Jewellery"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-category">Category</Label>
-                    <Select
-                      id="ob-category"
-                      value={onboardingData?.category || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, category: e.target.value })}
-                    >
-                      <option value="">Select Category...</option>
-                      <option value="Jewellery">Jewellery</option>
-                      <option value="Fashion">Fashion</option>
-                      <option value="Electronics">Electronics</option>
-                      <option value="Food">Food</option>
-                      <option value="Handicrafts">Handicrafts</option>
-                      <option value="Other">Other</option>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-whatsapp">WhatsApp Number</Label>
-                    <Input
-                      id="ob-whatsapp"
-                      value={onboardingData?.whatsappNumber || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, whatsappNumber: e.target.value })}
-                      placeholder="+92 300 1234567"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-agent-name">Agent Name</Label>
-                    <Input
-                      id="ob-agent-name"
-                      value={onboardingData?.agentName || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, agentName: e.target.value })}
-                      placeholder="e.g. Sara"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-delivery-charges">Delivery Charges</Label>
-                    <Input
-                      id="ob-delivery-charges"
-                      value={onboardingData?.deliveryCharges || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryCharges: e.target.value })}
-                      placeholder="e.g. Rs. 150"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-delivery-time">Delivery Time</Label>
-                    <Input
-                      id="ob-delivery-time"
-                      value={onboardingData?.deliveryTime || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, deliveryTime: e.target.value })}
-                      placeholder="e.g. 2-3 Days"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="ob-return-policy">Return Policy</Label>
-                    <Input
-                      id="ob-return-policy"
-                      value={onboardingData?.returnPolicy || ""}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, returnPolicy: e.target.value })}
-                      placeholder="e.g. 7 days return..."
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-ai-tone">AI Tone</Label>
-                    <Select
-                      id="ob-ai-tone"
-                      value={onboardingData?.aiTone || "friendly"}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, aiTone: e.target.value })}
-                    >
-                      <option value="professional">Professional</option>
-                      <option value="friendly">Friendly</option>
-                      <option value="casual">Casual</option>
-                      <option value="formal">Formal</option>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="ob-ai-language">AI Language</Label>
-                    <Select
-                      id="ob-ai-language"
-                      value={onboardingData?.aiLanguage || "urdu-english"}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, aiLanguage: e.target.value })}
-                    >
-                      <option value="urdu-english">Urdu + English</option>
-                      <option value="urdu">Urdu</option>
-                      <option value="english">English</option>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="mt-8 flex items-center gap-4 justify-end border-t border-line pt-4">
-                  {saveSuccess && (
-                    <span className="text-sm font-medium text-success">✅ Saved successfully!</span>
-                  )}
-                  <Button 
-                    onClick={handleSaveOnboarding} 
-                    disabled={savingOnboarding}
-                    className="bg-teal hover:bg-teal-bright text-paper"
-                  >
-                    {savingOnboarding ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === "tasks" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">Tasks & Rules</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Explain exactly what your AI agent should do and any negative constraints.
-              </p>
-            </div>
-
-            <Card>
-              <CardBody className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="agent-prompt" className="font-semibold text-ink">
-                    What should your agent do?
-                  </Label>
-                  <Badge tone="live">Completed</Badge>
-                </div>
-                <Textarea
-                  id="agent-prompt"
-                  value={agentPrompt}
-                  onChange={(e) => setAgentPrompt(e.target.value)}
-                  className="min-h-28 text-sm"
-                />
-                <div className="flex flex-wrap gap-2 pt-1.5">
-                  <button
-                    type="button"
-                    onClick={() => applyPresetPrompt("support")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Customer Support Agent
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyPresetPrompt("qualifier")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Sales Qualifier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyPresetPrompt("booking")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Booking Assistant
-                  </button>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="agent-never" className="font-semibold text-ink">
-                    What should your agent never do?
-                  </Label>
-                  <Badge tone="live">Completed</Badge>
-                </div>
-                <Textarea
-                  id="agent-never"
-                  value={agentNeverDo}
-                  onChange={(e) => setAgentNeverDo(e.target.value)}
-                  className="min-h-28 font-mono text-xs"
-                />
-                <div className="flex flex-wrap gap-2 pt-1.5">
-                  <button
-                    type="button"
-                    onClick={() => applyPresetConstraint("role")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Stay within role
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyPresetConstraint("promises")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Make no promises
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => applyPresetConstraint("sensitive")}
-                    className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-medium text-ink-soft hover:border-teal hover:text-teal"
-                  >
-                    + Protect sensitive data
-                  </button>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardBody className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="agent-memory" className="font-semibold text-ink">
-                    What should your agent memorize?
-                  </Label>
-                  <Badge tone="neutral">Optional</Badge>
-                </div>
-                <Textarea
-                  id="agent-memory"
-                  value={agentMemory}
-                  onChange={(e) => setAgentMemory(e.target.value.slice(0, 2000))}
-                  placeholder="e.g. We are Meher Handmade and sell premium customized payals in Lahore..."
-                  className="min-h-20 text-sm"
-                />
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs text-ink-faint">{agentMemory.length}/2000 characters</span>
-                  <button
-                    type="button"
-                    onClick={handleAutofillMemory}
-                    className="rounded-full bg-teal px-3 py-1 text-xs font-semibold text-paper hover:bg-teal-bright"
-                  >
-                    ✦ Autofill Brand
-                  </button>
-                </div>
-              </CardBody>
-            </Card>
-
-            <div className="flex items-center gap-4 justify-end pt-2">
-              {configSaveSuccess && (
-                <span className="text-sm font-medium text-success">✅ Tasks & Rules saved to Supabase!</span>
-              )}
-              <Button
-                onClick={() => saveConfigToSupabase()}
-                disabled={savingConfig}
-                className="bg-teal hover:bg-teal-bright text-paper"
-              >
-                {savingConfig ? "Saving Rules..." : "Save Tasks & Rules"}
-              </Button>
-            </div>
-          </div>
-        )}
-
-
-        {activeTab === "knowledge" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">Knowledge & Data</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Train your AI agent on specific catalog documents, pricing models, or website details.
-              </p>
-            </div>
-
-            {knowledgeList.length === 0 ? (
-              <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-card py-16 text-center space-y-4">
-                <span className="text-4xl">📂</span>
-                <p className="text-sm font-semibold text-ink">No knowledge added</p>
-                <p className="text-xs text-ink-soft max-w-sm mx-auto">
-                  Add website URLs, catalogue document text, or FAQs so your AI Agent responds with accurate information.
+      {/* Main Flow Content */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-6 items-start">
+        {/* Left Side: Form Contents */}
+        <div className="space-y-6 flex-1 min-w-0">
+          {activeTab === "onboarding" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">Onboarding Data</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Data collected during your initial onboarding setup. Edit below to keep your profile updated.
                 </p>
               </div>
-            ) : (
-              <Card className="overflow-hidden flex flex-col">
-                <div className="max-h-48 overflow-hidden flex flex-col divide-y divide-line">
-                  {knowledgeList.slice(0, 3).map((item) => (
-                    <div 
-                      key={item.id} 
-                      onClick={() => setSelectedKnowledgeId(item.id)}
-                      className={cn(
-                        "flex flex-col p-4 cursor-pointer transition-colors border-l-4",
-                        selectedKnowledgeId === item.id || (!selectedKnowledgeId && knowledgeList[0].id === item.id)
-                          ? "bg-teal-soft/20 border-teal"
-                          : "bg-card border-transparent hover:bg-paper-deep"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">
-                          {item.type === "website" ? "🌐" : item.type === "document" ? "📄" : "❓"}
-                        </span>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-ink">{item.name}</p>
-                          <p className="text-xs text-ink-soft line-clamp-1">{item.content}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                  {knowledgeList.length > 3 && (
-                    <div className="p-3 text-center text-xs text-teal font-medium bg-paper-deep hover:bg-paper cursor-pointer transition-colors">
-                      View all {knowledgeList.length} files →
-                    </div>
-                  )}
-                </div>
-                <div className="bg-paper-deep border-t border-line p-3 flex justify-end gap-3 items-center">
-                  <span className="text-[10px] text-ink-faint mr-auto uppercase tracking-wider font-semibold">
-                    Select a file to manage
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!selectedKnowledgeId && knowledgeList.length === 0}
-                    onClick={() => {
-                      const selected = knowledgeList.find(i => i.id === (selectedKnowledgeId || knowledgeList[0].id));
-                      if (selected) handleOpenInspectModal(selected);
-                    }}
-                  >
-                    View & Edit
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!selectedKnowledgeId && knowledgeList.length === 0}
-                    onClick={() => {
-                      const selected = knowledgeList.find(i => i.id === (selectedKnowledgeId || knowledgeList[0].id));
-                      if (selected) setItemToDelete(selected);
-                    }}
-                    className="border-danger/30 text-danger hover:bg-danger/10"
-                  >
-                    <span>🗑️</span> Remove
-                  </Button>
-                </div>
-              </Card>
-            )}
 
-            {inspectingItem && (
-              <Card className="border-teal mt-4 shadow-md max-w-full overflow-hidden">
-                <CardBody className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-line pb-3">
+              <Card>
+                <CardBody className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-sm font-semibold text-ink">Inspect & Edit Knowledge Source</h4>
-                      <p className="text-xs text-ink-soft mt-0.5">
-                        {spreadsheetData 
-                          ? "Modify values directly inside the spreadsheet grid cell fields below."
-                          : "You can modify the name and content details extracted by the agent."}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="inspect-name" className="text-xs font-semibold text-ink">Source Name</Label>
-                    <Input
-                      id="inspect-name"
-                      value={inspectName}
-                      onChange={(e) => setInspectName(e.target.value)}
-                      className="text-xs h-9"
-                    />
-                  </div>
-
-                  {spreadsheetData ? (
-                    <div className="space-y-3">
-                      <Label className="text-xs font-semibold text-ink">Spreadsheet Editor</Label>
-                      
-                      {/* Grid Actions & Search */}
-                      <div className="flex flex-col sm:flex-row items-center justify-between bg-paper-deep/40 p-2.5 rounded-lg gap-2 border border-line">
-                        <Input
-                          placeholder="Search rows..."
-                          value={gridSearchQuery}
-                          onChange={(e) => setGridSearchQuery(e.target.value)}
-                          className="h-8 text-xs max-w-xs bg-paper"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleGridAddRow}
-                          className="rounded-lg bg-teal text-paper px-3 py-1.5 text-xs font-bold hover:bg-teal-bright flex items-center gap-1.5 shrink-0"
-                        >
-                          <span>+</span> Add Row
-                        </button>
-                      </div>
-
-                      {/* Spreadsheet view */}
-                      <div className="border border-line rounded-lg overflow-hidden bg-card">
-                        <div className="max-h-80 overflow-auto max-w-full">
-                          <table className="w-full text-[11px] text-left border-collapse">
-                            <thead className="bg-paper-deep text-ink-soft sticky top-0 border-b border-line z-10 font-bold select-none">
-                              <tr>
-                                <th className="p-2 border-r border-line text-center w-10">#</th>
-                                {spreadsheetData.headers.map((h, i) => (
-                                  <th key={i} className="p-2 border-r border-line min-w-[120px] font-semibold text-ink">
-                                    {h}
-                                  </th>
-                                ))}
-                                <th className="p-2 text-center w-14 font-semibold text-ink">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {spreadsheetData.rows
-                                .map((row, idx) => ({ row, idx }))
-                                .filter(({ row }) => {
-                                  if (!gridSearchQuery.trim()) return true;
-                                  const query = gridSearchQuery.toLowerCase();
-                                  return Object.values(row).some(val => 
-                                    String(val).toLowerCase().includes(query)
-                                  );
-                                })
-                                .map(({ row, idx }) => (
-                                  <tr key={idx} className="border-b border-line hover:bg-paper-deep/20 transition-all">
-                                    <td className="p-2 border-r border-line text-center font-mono text-ink-faint">
-                                      {idx + 1}
-                                    </td>
-                                    {spreadsheetData.headers.map((h, colIdx) => (
-                                      <td key={colIdx} className="p-1 border-r border-line bg-paper/20">
-                                        <input
-                                          value={row[h] ?? ""}
-                                          onChange={(e) => handleGridCellChange(idx, h, e.target.value)}
-                                          className="w-full bg-transparent border-0 outline-none focus:bg-paper focus:ring-1 focus:ring-teal/30 p-1 rounded font-mono text-[11px] text-ink"
-                                        />
-                                      </td>
-                                    ))}
-                                    <td className="p-2 text-center">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleGridDeleteRow(idx)}
-                                        className="text-xs text-danger hover:underline font-semibold"
-                                      >
-                                        Delete
-                                      </button>
-                                    </td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between text-[10px] text-ink-faint">
-                        <span>Total rows: {spreadsheetData.rows.length}</span>
-                        <span>Columns: {spreadsheetData.headers.length}</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="inspect-content" className="text-xs font-semibold text-ink">Parsed Content / Training Data</Label>
-                      <Textarea
-                        id="inspect-content"
-                        value={inspectContent}
-                        onChange={(e) => setInspectContent(e.target.value)}
-                        className="min-h-56 font-mono text-xs leading-relaxed"
+                      <Label htmlFor="ob-business-name">Business Name</Label>
+                      <Input
+                        id="ob-business-name"
+                        value={onboardingData?.businessName || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, businessName: e.target.value })}
+                        placeholder="e.g. Glam Jewellery"
                       />
                     </div>
-                  )}
+                    <div>
+                      <Label htmlFor="ob-category">Category</Label>
+                      <Select
+                        id="ob-category"
+                        value={onboardingData?.category || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, category: e.target.value })}
+                      >
+                        <option value="">Select Category...</option>
+                        <option value="Jewellery">Jewellery</option>
+                        <option value="Fashion">Fashion</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Food">Food</option>
+                        <option value="Handicrafts">Handicrafts</option>
+                        <option value="Other">Other</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="ob-whatsapp">WhatsApp Number</Label>
+                      <Input
+                        id="ob-whatsapp"
+                        value={onboardingData?.whatsappNumber || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, whatsappNumber: e.target.value })}
+                        placeholder="+92 300 1234567"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ob-agent-name">Agent Name</Label>
+                      <Input
+                        id="ob-agent-name"
+                        value={onboardingData?.agentName || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, agentName: e.target.value })}
+                        placeholder="e.g. Sara"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ob-delivery-charges">Delivery Charges</Label>
+                      <Input
+                        id="ob-delivery-charges"
+                        value={onboardingData?.deliveryCharges || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, deliveryCharges: e.target.value })}
+                        placeholder="e.g. Rs. 150"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="ob-delivery-time">Delivery Time</Label>
+                      <Input
+                        id="ob-delivery-time"
+                        value={onboardingData?.deliveryTime || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, deliveryTime: e.target.value })}
+                        placeholder="e.g. 2-3 Days"
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label htmlFor="ob-return-policy">Return Policy</Label>
+                      <Input
+                        id="ob-return-policy"
+                        value={onboardingData?.returnPolicy || ""}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, returnPolicy: e.target.value })}
+                        placeholder="e.g. 7 days return..."
+                      />
+                    </div>
 
-                  <div className="flex gap-2 justify-end pt-3 border-t border-line">
-                    <Button variant="ghost" size="sm" onClick={() => setInspectingItem(null)}>
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleSaveInspectItem}>
-                      Save Changes
-                    </Button>
                   </div>
-                </CardBody>
-              </Card>
-            )}
-
-            <div className="relative">
-              <Button
-                onClick={() => setShowAddKnowledgeDropdown((v) => !v)}
-                className="w-full flex justify-center gap-2"
-              >
-                <span>+</span> Add Knowledge Source
-              </Button>
-
-              {showAddKnowledgeDropdown && (
-                <div className="absolute top-12 left-0 right-0 z-20 rounded-xl border border-line bg-card py-2 shadow-lg divide-y divide-line/40">
-                  <button
-                    onClick={() => {
-                      setShowAddWebsiteModal(true);
-                      setShowAddKnowledgeDropdown(false);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper-deep hover:text-ink font-medium"
-                  >
-                    <span>🌐</span> Add website URL
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAddDocModal(true);
-                      setShowAddKnowledgeDropdown(false);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper-deep hover:text-ink font-medium"
-                  >
-                    <span>📊</span> Upload CSV or Excel catalogue
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowAddQAModal(true);
-                      setShowAddKnowledgeDropdown(false);
-                    }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper-deep hover:text-ink font-medium"
-                  >
-                    <span>❓</span> Create Q&A list
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {showAddWebsiteModal && (
-              <Card className="border-teal">
-                <CardBody className="space-y-4">
-                  <h4 className="text-sm font-semibold text-ink">Add website URL</h4>
-                  <Input
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    placeholder="https://myjewellerybrand.com/pages/shipping-policy"
-                  />
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="ghost" size="sm" onClick={() => setShowAddWebsiteModal(false)}>
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleAddWebsite} disabled={!newUrl.trim()}>
-                      Add website
-                    </Button>
-                  </div>
-                </CardBody>
-              </Card>
-            )}
-
-            {showAddDocModal && (
-              <Card className="border-teal">
-                <CardBody className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold text-ink">Upload CSV or Excel Catalogue</h4>
-                    <p className="text-xs text-ink-soft mt-1">
-                      Upload a CSV (.csv) or Excel (.xlsx, .xls) file containing your product catalog. We will automatically parse columns like product name, price, variants, and descriptions.
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-dashed border-line bg-paper/40 p-6 text-center">
-                    <input
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                      id="csv-file-input"
-                      className="hidden"
-                      onChange={handleCSVUpload}
-                    />
-                    <label
-                      htmlFor="csv-file-input"
-                      className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-paper hover:bg-teal-bright shadow-sm transition-all"
+                  
+                  <div className="mt-8 flex items-center gap-4 justify-end border-t border-line pt-4">
+                    {saveSuccess && (
+                      <span className="text-sm font-semibold text-success">✅ Saved successfully!</span>
+                    )}
+                    <Button 
+                      onClick={handleSaveOnboarding} 
+                      disabled={savingOnboarding}
+                      className="bg-teal hover:bg-teal-bright text-paper"
                     >
-                      Choose CSV or Excel File
-                    </label>
-                    <p className="mt-2 text-[11px] text-ink-faint">Supports CSV (.csv) and Excel (.xlsx, .xls) formats</p>
-                  </div>
-                  <div className="flex justify-end pt-2 border-t border-line">
-                    <Button variant="ghost" size="sm" onClick={() => setShowAddDocModal(false)}>
-                      Cancel
+                      {savingOnboarding ? "Saving..." : "Save Changes"}
                     </Button>
                   </div>
                 </CardBody>
               </Card>
-            )}
+            </div>
+          )}
 
-            {showAddQAModal && (
-              <Card className="border-teal">
-                <CardBody className="space-y-4">
-                  <h4 className="text-sm font-semibold text-ink">Create Q&A list item</h4>
-                  <Input
-                    value={newQ}
-                    onChange={(e) => setNewQ(e.target.value)}
-                    placeholder="Customer Question (e.g. Do you deliver to Multan?)"
-                  />
+          {activeTab === "tasks" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">Tasks & Rules</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Explain exactly what your AI agent should do and any negative constraints.
+                </p>
+              </div>
+
+              <Card>
+                <CardBody className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="agent-prompt" className="font-semibold text-ink">
+                      What should your agent do?
+                    </Label>
+                    <Badge tone="live">Completed</Badge>
+                  </div>
                   <Textarea
-                    value={newA}
-                    onChange={(e) => setNewA(e.target.value)}
-                    placeholder="Auto-Reply Answer (e.g. Yes! Flat Rs. 200 delivery rate...)"
-                    className="min-h-20"
+                    id="agent-prompt"
+                    value={agentPrompt}
+                    onChange={(e) => setAgentPrompt(e.target.value)}
+                    className="min-h-28 text-sm"
                   />
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="ghost" size="sm" onClick={() => setShowAddQAModal(false)}>
-                      Cancel
-                    </Button>
-                    <Button size="sm" onClick={handleAddQA} disabled={!newQ.trim() || !newA.trim()}>
-                      Add Q&A
-                    </Button>
+                  <div className="flex flex-wrap gap-2 pt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyPresetPrompt("support")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
+                    >
+                      + Customer Support Agent
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPresetPrompt("qualifier")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
+                    >
+                      + Sales Qualifier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPresetPrompt("booking")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
+                    >
+                      + Booking Assistant
+                    </button>
                   </div>
                 </CardBody>
               </Card>
-            )}
-          </div>
-        )}
 
-        {activeTab === "tone" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">Tone & Voice</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Configure your AI agent&apos;s styling, conciseness, and Hinglish language blending.
-              </p>
-            </div>
-
-            <Card>
-              <CardBody className="space-y-4">
-                <Label className="font-semibold text-ink">Tone presets & guidelines</Label>
-                <div className="flex flex-wrap gap-2">
-                  {toneGuidelines.map((guide, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 rounded-full border border-line bg-paper px-3.5 py-1 text-xs text-ink"
+              <Card>
+                <CardBody className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="agent-never" className="font-semibold text-ink">
+                      What should your agent never do?
+                    </Label>
+                    <Badge tone="live">Completed</Badge>
+                  </div>
+                  <Textarea
+                    id="agent-never"
+                    value={agentNeverDo}
+                    onChange={(e) => setAgentNeverDo(e.target.value)}
+                    className="min-h-28 font-mono text-xs"
+                  />
+                  <div className="flex flex-wrap gap-2 pt-1.5">
+                    <button
+                      type="button"
+                      onClick={() => applyPresetConstraint("role")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
                     >
-                      <span>{guide}</span>
-                      <button
-                        onClick={() => handleRemoveGuideline(idx)}
-                        className="text-ink-faint hover:text-danger font-semibold"
+                      + Stay within role
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPresetConstraint("promises")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
+                    >
+                      + Make no promises
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPresetConstraint("sensitive")}
+                      className="rounded-full border border-line bg-paper px-3 py-1 text-xs font-semibold text-ink-soft hover:border-teal hover:text-teal"
+                    >
+                      + Protect sensitive data
+                    </button>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardBody className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="agent-memory" className="font-semibold text-ink">
+                      What should your agent memorize?
+                    </Label>
+                    <Badge tone="neutral">Optional</Badge>
+                  </div>
+                  <Textarea
+                    id="agent-memory"
+                    value={agentMemory}
+                    onChange={(e) => setAgentMemory(e.target.value.slice(0, 2000))}
+                    placeholder="e.g. We are Meher Handmade and sell premium customized payals in Lahore..."
+                    className="min-h-20 text-sm"
+                  />
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs text-ink-faint">{agentMemory.length}/2000 characters</span>
+                    <button
+                      type="button"
+                      onClick={handleAutofillMemory}
+                      className="rounded-full bg-teal px-3 py-1 text-xs font-semibold text-paper hover:bg-teal-bright"
+                    >
+                      ✦ Autofill Brand
+                    </button>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <div className="flex items-center gap-4 justify-end pt-2">
+                {configSaveSuccess && (
+                  <span className="text-sm font-semibold text-success">✅ Tasks & Rules saved!</span>
+                )}
+                <Button
+                  onClick={() => saveConfigToSupabase()}
+                  disabled={savingConfig}
+                  className="bg-teal hover:bg-teal-bright text-paper"
+                >
+                  {savingConfig ? "Saving Rules..." : "Save Tasks & Rules"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "knowledge" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">Knowledge & Data</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Train your AI agent on specific catalog documents, pricing models, or website details.
+                </p>
+              </div>
+
+              {visibleKnowledgeList.length === 0 ? (
+                <div className="rounded-[var(--radius-card)] border border-dashed border-line bg-card-strong py-16 text-center space-y-4">
+                  <span className="text-4xl">📂</span>
+                  <p className="text-sm font-semibold text-ink">No knowledge added</p>
+                  <p className="text-xs text-ink-soft max-w-sm mx-auto">
+                    Add website URLs, catalogue document text, or FAQs so your AI Agent responds with accurate info.
+                  </p>
+                </div>
+              ) : (
+                <Card className="overflow-hidden flex flex-col">
+                  <div className="max-h-48 overflow-hidden flex flex-col divide-y divide-line">
+                    {visibleKnowledgeList.slice(0, 3).map((item) => (
+                      <div 
+                        key={item.id} 
+                        onClick={() => setSelectedKnowledgeId(item.id)}
+                        className={cn(
+                          "flex flex-col p-4 cursor-pointer transition-colors border-l-4",
+                          selectedKnowledgeId === item.id || (!selectedKnowledgeId && visibleKnowledgeList[0].id === item.id)
+                            ? "bg-teal-soft/20 border-teal"
+                            : "bg-card-strong border-transparent hover:bg-paper-deep"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">
+                            {item.type === "website" ? "🌐" : item.type === "document" ? "📄" : "❓"}
+                          </span>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-ink">{item.name}</p>
+                            <p className="text-xs text-ink-soft line-clamp-1">
+                              {(() => {
+                                if (item.content.trim().startsWith('{"headers":') && item.content.trim().endsWith('}')) {
+                                  try {
+                                    const parsed = JSON.parse(item.content);
+                                    if (parsed && Array.isArray(parsed.headers)) {
+                                      return `Spreadsheet database with columns: ${parsed.headers.join(", ")}`;
+                                    }
+                                  } catch (e) {}
+                                }
+                                return item.content;
+                              })()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {visibleKnowledgeList.length > 3 && (
+                      <div className="p-3 text-center text-xs text-teal font-semibold bg-paper-deep hover:bg-paper cursor-pointer transition-colors">
+                        View all {visibleKnowledgeList.length} files →
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-paper border-t border-line p-3 flex justify-end gap-3 items-center">
+                    <span className="text-[10px] text-ink-faint mr-auto uppercase tracking-wider font-semibold">
+                      Select a file to manage
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!selectedKnowledgeId && visibleKnowledgeList.length === 0}
+                      onClick={() => {
+                        const selected = visibleKnowledgeList.find(i => i.id === (selectedKnowledgeId || (visibleKnowledgeList[0] && visibleKnowledgeList[0].id)));
+                        if (selected) handleOpenInspectModal(selected);
+                      }}
+                    >
+                      View & Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!selectedKnowledgeId && visibleKnowledgeList.length === 0}
+                      onClick={() => {
+                        const selected = visibleKnowledgeList.find(i => i.id === (selectedKnowledgeId || (visibleKnowledgeList[0] && visibleKnowledgeList[0].id)));
+                        if (selected) setItemToDelete(selected);
+                      }}
+                      className="border-danger/30 text-danger hover:bg-danger/10"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </Card>
+              )}
+
+              {inspectingItem && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-md">
+                  <div className="bg-card-strong border border-line rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between border-b border-line p-5">
+                      <div>
+                        <h4 className="text-sm font-bold text-ink">Inspect & Edit Knowledge Source</h4>
+                        <p className="text-xs text-ink-soft mt-0.5">
+                          {spreadsheetData 
+                            ? "Modify values directly inside the spreadsheet grid cell fields below."
+                            : "You can modify the name and content details extracted by the agent."}
+                        </p>
+                      </div>
+                      <button 
+                        onClick={() => setInspectingItem(null)}
+                        className="text-ink-faint hover:text-ink text-sm font-bold p-1 w-6 h-6 flex items-center justify-center rounded-full hover:bg-paper-deep/30 transition-colors"
                       >
                         ✕
                       </button>
                     </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 pt-2 border-t border-line">
-                  <Input
-                    value={newGuideline}
-                    onChange={(e) => setNewGuideline(e.target.value)}
-                    placeholder="Add custom guideline..."
-                    className="h-10 text-xs"
-                  />
-                  <Button onClick={handleAddGuideline} className="h-10 text-xs shrink-0 px-4">
-                    Add
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
 
-            <Card>
-              <CardBody className="space-y-4">
-                <Label className="font-semibold text-ink">Response conciseness</Label>
-                <Select
-                  value={conciseness}
-                  onChange={(e) => setConciseness(e.target.value)}
-                >
-                  <option value="concise">Concise — Short sentences (Under 100 chars)</option>
-                  <option value="detailed">Conversational — Explanatory responses</option>
-                </Select>
-              </CardBody>
-            </Card>
+                    {/* Modal Content Body */}
+                    <div className="p-6 overflow-y-auto flex-1 space-y-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="inspect-name" className="text-xs font-semibold text-ink">Source Name</Label>
+                        <Input
+                          id="inspect-name"
+                          value={inspectName}
+                          onChange={(e) => setInspectName(e.target.value)}
+                          className="text-xs h-9 bg-paper"
+                        />
+                      </div>
 
-            <Card>
-              <CardBody className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm font-semibold text-ink">Hinglish / Roman Urdu support</p>
-                  <p className="text-xs text-ink-soft mt-0.5">
-                    Allow blending Urdu words written in English scripts (e.g. &ldquo;Delivery charges kya hain?&rdquo;).
-                  </p>
+                      {spreadsheetData ? (
+                        <div className="space-y-3 flex flex-col flex-1 min-h-[350px]">
+                          <Label className="text-xs font-semibold text-ink">Spreadsheet Editor</Label>
+                          
+                          {/* Grid Actions & Search */}
+                          <div className="flex flex-col sm:flex-row items-center justify-between bg-paper-deep/40 p-2.5 rounded-lg gap-2 border border-line">
+                            <Input
+                              placeholder="Search rows..."
+                              value={gridSearchQuery}
+                              onChange={(e) => setGridSearchQuery(e.target.value)}
+                              className="h-8 text-xs max-w-xs bg-paper"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleGridAddRow}
+                              className="rounded-lg bg-teal text-paper px-3 py-1.5 text-xs font-bold hover:bg-teal-bright flex items-center gap-1.5 shrink-0"
+                            >
+                              <span>+</span> Add Row
+                            </button>
+                          </div>
+
+                          {/* Spreadsheet view with localized scroll container */}
+                          <div className="border border-line rounded-lg overflow-hidden bg-card flex-1 flex flex-col min-h-[250px]">
+                            <div className="overflow-auto max-h-[380px] w-full flex-1">
+                              <table className="w-full text-[11px] text-left border-collapse">
+                                <thead className="bg-paper-deep text-ink-soft sticky top-0 border-b border-line z-10 font-bold select-none">
+                                  <tr>
+                                    <th className="p-2 border-r border-line text-center w-10">#</th>
+                                    {spreadsheetData.headers.map((h, i) => (
+                                      <th key={i} className="p-2 border-r border-line min-w-[120px] font-semibold text-ink">
+                                        {h}
+                                      </th>
+                                    ))}
+                                    <th className="p-2 text-center w-14 font-semibold text-ink">Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {spreadsheetData.rows
+                                    .map((row, idx) => ({ row, idx }))
+                                    .filter(({ row }) => {
+                                      if (!gridSearchQuery.trim()) return true;
+                                      const query = gridSearchQuery.toLowerCase();
+                                      return Object.values(row).some(val => 
+                                        String(val).toLowerCase().includes(query)
+                                      );
+                                    })
+                                    .map(({ row, idx }) => (
+                                      <tr key={idx} className="border-b border-line hover:bg-paper-deep/20 transition-all">
+                                        <td className="p-2 border-r border-line text-center font-mono text-ink-faint">
+                                          {idx + 1}
+                                        </td>
+                                        {spreadsheetData.headers.map((h, colIdx) => (
+                                          <td key={colIdx} className="p-1 border-r border-line bg-paper/20">
+                                            <input
+                                              value={row[h] ?? ""}
+                                              onChange={(e) => handleGridCellChange(idx, h, e.target.value)}
+                                              className="w-full bg-transparent border-0 outline-none focus:bg-paper focus:ring-1 focus:ring-teal/30 p-1 rounded font-mono text-[11px] text-ink"
+                                            />
+                                          </td>
+                                        ))}
+                                        <td className="p-2 text-center">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleGridDeleteRow(idx)}
+                                            className="text-xs text-danger hover:underline font-semibold"
+                                          >
+                                            Delete
+                                          </button>
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-ink-faint">
+                            <span>Total rows: {spreadsheetData.rows.length}</span>
+                            <span>Columns: {spreadsheetData.headers.length}</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <Label htmlFor="inspect-content" className="text-xs font-semibold text-ink">Parsed Content / Training Data</Label>
+                          <Textarea
+                            id="inspect-content"
+                            value={inspectContent}
+                            onChange={(e) => setInspectContent(e.target.value)}
+                            className="min-h-56 font-mono text-xs leading-relaxed"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="flex gap-2 justify-end p-4 bg-paper border-t border-line">
+                      <Button variant="ghost" size="sm" onClick={() => setInspectingItem(null)}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleSaveInspectItem}>
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-                <button
-                  onClick={() => setHinglishSupport(!hinglishSupport)}
-                  className={cn(
-                    "flex h-6 w-11 flex-none items-center rounded-full px-0.5 transition-colors duration-200 focus:outline-none",
-                    hinglishSupport ? "bg-teal" : "bg-ink-faint"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "h-5 w-5 rounded-full bg-paper transition-transform duration-200",
-                      hinglishSupport ? "translate-x-5" : "translate-x-0"
-                    )}
-                  />
-                </button>
-              </CardBody>
-            </Card>
-          </div>
-        )}
+              )}
 
-        {activeTab === "tools" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">Tools & Actions</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Configure auto-checkout systems or third-party webhooks for Shopify.
-              </p>
-            </div>
-
-            <Card>
-              <CardBody className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm font-semibold text-ink">Shopify / WooCommerce integration</p>
-                  <p className="text-xs text-ink-soft mt-0.5">
-                    Fetch inventory status and sync customer numbers for COD checkouts.
-                  </p>
-                </div>
+              <div className="relative">
                 <Button
-                  variant={shopifyConnected ? "outline" : "primary"}
-                  size="sm"
-                  onClick={() => setShopifyConnected((v) => !v)}
+                  onClick={() => setShowAddKnowledgeDropdown((v) => !v)}
+                  className="w-full flex justify-center gap-2"
                 >
-                  {shopifyConnected ? "Disconnect" : "Connect Store"}
+                  <span>+</span> Add Knowledge Source
                 </Button>
-              </CardBody>
-            </Card>
 
-            <Card>
-              <CardBody className="flex items-center justify-between p-5">
-                <div>
-                  <p className="text-sm font-semibold text-ink">Automatic COD Confirmation</p>
-                  <p className="text-xs text-ink-soft mt-0.5">
-                    Instantly dispatch WhatsApp template confirmations upon Shopify checkout webhook.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setCodAutoConfirm(!codAutoConfirm)}
-                  className={cn(
-                    "flex h-6 w-11 flex-none items-center rounded-full px-0.5 transition-colors duration-200 focus:outline-none",
-                    codAutoConfirm ? "bg-teal" : "bg-ink-faint"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "h-5 w-5 rounded-full bg-paper transition-transform duration-200",
-                      codAutoConfirm ? "translate-x-5" : "translate-x-0"
-                    )}
-                  />
-                </button>
-              </CardBody>
-            </Card>
-          </div>
-        )}
-
-        {activeTab === "whatsapp" && (
-          <div className="space-y-6">
-            <div>
-              <h2 className="font-display text-2xl tracking-tight text-ink">WhatsApp Coexistence</h2>
-              <p className="text-sm text-ink-soft mt-1">
-                Connect your business number and run our AI agent concurrently with your manual WhatsApp app.
-              </p>
-            </div>
-
-            <Card>
-              <CardBody className="py-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-line pb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">💬</span>
-                    <div>
-                      <p className="text-sm font-semibold text-ink">
-                        {whatsappRequested ? "Connection Pending" : "Not connected"}
-                      </p>
-                      <p className="font-mono text-xs text-ink-soft">{whatsappNumber || "No number connected"}</p>
-                    </div>
-                  </div>
-                  {whatsappRequested ? (
-                    <Badge tone="marigold">Setup requested</Badge>
-                  ) : null}
-                </div>
-
-                {!whatsappRequested ? (
-                  <div className="space-y-3">
-                    <Label htmlFor="wa-num">Submit WhatsApp Business Number</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="wa-num"
-                        value={whatsappNumber}
-                        onChange={(e) => setWhatsappNumber(e.target.value)}
-                        placeholder="+92 300 1234567"
-                        className="max-w-xs"
-                      />
-                      <Button onClick={handleRequestWhatsApp}>Connect</Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-xl bg-paper-deep/40 p-4 text-xs text-ink-soft">
-                    Connection has been requested. The Deosai team will configure Meta Cloud API coexistence for your business shortly.
+                {showAddKnowledgeDropdown && (
+                  <div className="absolute top-12 left-0 right-0 z-20 rounded-xl border border-line bg-card-strong py-2 shadow-lg divide-y divide-line/40">
+                    <button
+                      onClick={() => {
+                        setShowAddWebsiteModal(true);
+                        setShowAddKnowledgeDropdown(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper hover:text-ink font-medium"
+                    >
+                      <span>🌐</span> Add website URL
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddDocModal(true);
+                        setShowAddKnowledgeDropdown(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper hover:text-ink font-medium"
+                    >
+                      <span>📊</span> Upload CSV or Excel catalogue
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAddQAModal(true);
+                        setShowAddKnowledgeDropdown(false);
+                      }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-xs text-ink-soft hover:bg-paper hover:text-ink font-medium"
+                    >
+                      <span>❓</span> Create Q&A list
+                    </button>
                   </div>
                 )}
-              </CardBody>
-            </Card>
-          </div>
-        )}
-      </main>
-
-      {/* 3. Right Playground Pane */}
-      <aside className="bg-card flex flex-col justify-between h-full overflow-hidden select-none">
-        <div className="border-b border-line px-4 py-3 flex items-center justify-between bg-card flex-none">
-          <p className="text-xs font-semibold text-ink">Playground</p>
-          <button
-            onClick={() =>
-              setPlaygroundMessages([
-                {
-                  id: "m_init",
-                  sender: "bot",
-                  text: "Hello! I am your AI Auto-DM Agent. Type anything to test how I respond based on your Tasks & Rules.",
-                },
-              ])
-            }
-            className="rounded-lg p-1 text-ink-soft hover:bg-paper-deep"
-            aria-label="Restart chat"
-          >
-            🔄
-          </button>
-        </div>
-
-        <div className="border-b border-line bg-paper/20 p-2 flex gap-1 justify-center flex-none">
-          <Badge tone="live" className="cursor-pointer">
-            Chat
-          </Badge>
-          <Badge tone="neutral" className="opacity-50">
-            Phone (N/A)
-          </Badge>
-          <Badge tone="neutral" className="opacity-50">
-            Email (N/A)
-          </Badge>
-        </div>
-
-        <div className="flex-1 overflow-y-auto bg-paper/30 p-4 space-y-3">
-          {playgroundMessages.map((m) => {
-            const isUser = m.sender === "user";
-            return (
-              <div
-                key={m.id}
-                className={cn(
-                  "max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
-                  isUser
-                    ? "self-end ml-auto bg-teal text-paper rounded-br-none"
-                    : "self-start bg-paper-deep text-ink rounded-bl-none"
-                )}
-              >
-                {m.text}
               </div>
-            );
-          })}
-          {botTyping && (
-            <div className="max-w-[30%] bg-paper-deep text-ink rounded-2xl rounded-bl-none px-3 py-2 text-xs self-start italic">
-              AI is writing...
+
+              {showAddWebsiteModal && (
+                <Card className="border-teal">
+                  <CardBody className="space-y-4">
+                    <h4 className="text-sm font-semibold text-ink">Add website URL</h4>
+                    <Input
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder="https://myjewellerybrand.com/pages/shipping-policy"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddWebsiteModal(false)}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleAddWebsite} disabled={!newUrl.trim()}>
+                        Add website
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+
+              {showAddDocModal && (
+                <Card className="border-teal">
+                  <CardBody className="space-y-4">
+                    <div>
+                      <h4 className="text-sm font-semibold text-ink">Upload CSV or Excel Catalogue</h4>
+                      <p className="text-xs text-ink-soft mt-1">
+                        Upload a CSV (.csv) or Excel (.xlsx, .xls) file containing your product catalog. We will automatically parse columns like product name, price, variants, and descriptions.
+                      </p>
+                    </div>
+                    <div className="rounded-xl border border-dashed border-line bg-paper/40 p-6 text-center">
+                      <input
+                        type="file"
+                        accept=".csv,.xlsx,.xls"
+                        id="csv-file-input"
+                        className="hidden"
+                        onChange={handleCSVUpload}
+                      />
+                      <label
+                        htmlFor="csv-file-input"
+                        className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-teal px-4 py-2 text-xs font-semibold text-paper hover:bg-teal-bright shadow-sm transition-all"
+                      >
+                        Choose CSV or Excel File
+                      </label>
+                      <p className="mt-2 text-[11px] text-ink-faint">Supports CSV (.csv) and Excel (.xlsx, .xls) formats</p>
+                    </div>
+                    <div className="flex justify-end pt-2 border-t border-line">
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddDocModal(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+
+              {showAddQAModal && (
+                <Card className="border-teal">
+                  <CardBody className="space-y-4">
+                    <h4 className="text-sm font-semibold text-ink">Create Q&A list item</h4>
+                    <Input
+                      value={newQ}
+                      onChange={(e) => setNewQ(e.target.value)}
+                      placeholder="Customer Question (e.g. Do you deliver to Multan?)"
+                    />
+                    <Textarea
+                      value={newA}
+                      onChange={(e) => setNewA(e.target.value)}
+                      placeholder="Auto-Reply Answer (e.g. Yes! Flat Rs. 200 delivery rate...)"
+                      className="min-h-20"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="ghost" size="sm" onClick={() => setShowAddQAModal(false)}>
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={handleAddQA} disabled={!newQ.trim() || !newA.trim()}>
+                        Add Q&A
+                      </Button>
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
             </div>
           )}
-          <div ref={chatEndRef} />
+
+          {activeTab === "tone" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">Tone & Voice</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Configure your AI agent&apos;s styling, conciseness, and Hinglish language blending.
+                </p>
+              </div>
+
+              <Card>
+                <CardBody className="space-y-4">
+                  <Label className="font-semibold text-ink">Tone presets & guidelines</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {toneGuidelines.map((guide, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 rounded-full border border-line bg-paper px-3.5 py-1 text-xs text-ink"
+                      >
+                        <span>{guide}</span>
+                        <button
+                          onClick={() => handleRemoveGuideline(idx)}
+                          className="text-ink-faint hover:text-danger font-semibold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 pt-2 border-t border-line">
+                    <Input
+                      value={newGuideline}
+                      onChange={(e) => setNewGuideline(e.target.value)}
+                      placeholder="Add custom guideline..."
+                      className="h-10 text-xs"
+                    />
+                    <Button onClick={handleAddGuideline} className="h-10 text-xs shrink-0 px-4">
+                      Add
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardBody className="space-y-4">
+                  <Label className="font-semibold text-ink">Response conciseness</Label>
+                  <Select
+                    value={conciseness}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setConciseness(val);
+                      saveConfigToSupabase(undefined, undefined, undefined, undefined, undefined, val, undefined);
+                    }}
+                  >
+                    <option value="concise">Concise — Short sentences (Under 100 chars)</option>
+                    <option value="detailed">Conversational — Explanatory responses</option>
+                  </Select>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardBody className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">Hinglish / Roman Urdu support</p>
+                    <p className="text-xs text-ink-soft mt-0.5">
+                      Allow blending Urdu words written in English scripts (e.g. &ldquo;Delivery charges kya hain?&rdquo;).
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const val = !hinglishSupport;
+                      setHinglishSupport(val);
+                      saveConfigToSupabase(undefined, undefined, undefined, undefined, undefined, undefined, val);
+                    }}
+                    className={cn(
+                      "flex h-6 w-11 flex-none items-center rounded-full px-0.5 transition-colors duration-200 focus:outline-none",
+                      hinglishSupport ? "bg-teal" : "bg-ink-faint"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-5 w-5 rounded-full bg-paper transition-transform duration-200",
+                        hinglishSupport ? "translate-x-5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </CardBody>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "tools" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">Tools & Actions</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Configure auto-checkout systems or third-party webhooks for Shopify.
+                </p>
+              </div>
+
+              <Card>
+                <CardBody className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">Shopify / WooCommerce integration</p>
+                    <p className="text-xs text-ink-soft mt-0.5">
+                      Fetch inventory status and sync customer numbers for COD checkouts.
+                    </p>
+                  </div>
+                  <Button
+                    variant={shopifyConnected ? "outline" : "primary"}
+                    size="sm"
+                    onClick={() => setShopifyConnected((v) => !v)}
+                  >
+                    {shopifyConnected ? "Disconnect" : "Connect Store"}
+                  </Button>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardBody className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="text-sm font-semibold text-ink">Automatic COD Confirmation</p>
+                    <p className="text-xs text-ink-soft mt-0.5">
+                      Instantly dispatch WhatsApp template confirmations upon Shopify checkout webhook.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setCodAutoConfirm(!codAutoConfirm)}
+                    className={cn(
+                      "flex h-6 w-11 flex-none items-center rounded-full px-0.5 transition-colors duration-200 focus:outline-none",
+                      codAutoConfirm ? "bg-teal" : "bg-ink-faint"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-5 w-5 rounded-full bg-paper transition-transform duration-200",
+                        codAutoConfirm ? "translate-x-5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </CardBody>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "whatsapp" && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-ink font-heading">WhatsApp Coexistence</h2>
+                <p className="text-xs text-ink-soft mt-1">
+                  Connect your business number and run our AI agent concurrently with your manual WhatsApp app.
+                </p>
+              </div>
+
+              <Card>
+                <CardBody className="py-6 space-y-4">
+                  <div className="flex items-center justify-between border-b border-line pb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">💬</span>
+                      <div>
+                        <p className="text-sm font-semibold text-ink">
+                          {whatsappRequested ? "Connection Pending" : "Not connected"}
+                        </p>
+                        <p className="font-mono text-xs text-ink-soft">{whatsappNumber || "No number connected"}</p>
+                      </div>
+                    </div>
+                    {whatsappRequested ? (
+                      <Badge tone="marigold">Setup requested</Badge>
+                    ) : null}
+                  </div>
+
+                  {!whatsappRequested ? (
+                    <div className="space-y-3">
+                      <Label htmlFor="wa-num">Submit WhatsApp Business Number</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="wa-num"
+                          value={whatsappNumber}
+                          onChange={(e) => setWhatsappNumber(e.target.value)}
+                          placeholder="+92 300 1234567"
+                          className="max-w-xs"
+                        />
+                        <Button onClick={handleRequestWhatsApp}>Connect</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft">
+                      Connection has been requested. The Deosai team will configure Meta Cloud API coexistence for your business shortly.
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
+          )}
         </div>
 
-        <div className="border-t border-line p-3 bg-card flex-none flex gap-2 items-center">
-          <Input
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-            placeholder="Ask your AI Agent anything..."
-            className="flex-1 h-9 text-xs"
-          />
-          <button
-            onClick={handleSendMessage}
-            disabled={!userInput.trim() || botTyping}
-            className="rounded-full bg-teal text-paper grid h-9 w-9 place-items-center hover:bg-teal-bright disabled:opacity-50"
-          >
-            ➔
-          </button>
-        </div>
-      </aside>
+        {/* Right Side: Playground Panel */}
+        <Card className="bg-card-strong xl:sticky xl:top-6 overflow-hidden w-full max-w-full">
+          <div className="border-b border-line px-4 py-3.5 flex items-center justify-between bg-card-strong flex-none">
+            <p className="text-xs font-bold text-ink">Playground</p>
+            <button
+              onClick={() =>
+                setPlaygroundMessages([
+                  {
+                    id: "m_init",
+                    sender: "bot",
+                    text: "Hello! I am your AI Auto-DM Agent. Type anything to test how I respond based on your Tasks & Rules.",
+                  },
+                ])
+              }
+              className="rounded-lg p-1 text-ink-soft hover:bg-paper-deep"
+              aria-label="Restart chat"
+            >
+              🔄
+            </button>
+          </div>
+
+          <div className="border-b border-line bg-paper/20 p-2.5 flex gap-1.5 justify-center flex-none">
+            <Badge tone="live" className="cursor-pointer">
+              Chat
+            </Badge>
+            <Badge tone="neutral" className="opacity-50">
+              Phone (N/A)
+            </Badge>
+            <Badge tone="neutral" className="opacity-50">
+              Email (N/A)
+            </Badge>
+          </div>
+
+          <div className="h-[320px] overflow-y-auto bg-paper/30 p-4 space-y-3">
+            {playgroundMessages.map((m) => {
+              const isUser = m.sender === "user";
+              return (
+                <div
+                  key={m.id}
+                  className={cn(
+                    "max-w-[85%] rounded-2xl px-3 py-2 text-xs leading-relaxed",
+                    isUser
+                      ? "self-end ml-auto bg-teal text-white rounded-br-none"
+                      : "self-start bg-paper text-ink rounded-bl-none border border-line"
+                  )}
+                >
+                  {m.text}
+                </div>
+              );
+            })}
+            {botTyping && (
+              <div className="max-w-[40%] bg-paper text-ink rounded-2xl rounded-bl-none px-3 py-2 text-xs self-start italic border border-line">
+                AI is writing...
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="border-t border-line p-3 bg-card-strong flex-none flex gap-2 items-center">
+            <Input
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder="Ask your AI Agent anything..."
+              className="flex-1 h-9 text-xs"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!userInput.trim() || botTyping}
+              className="rounded-full bg-teal text-paper grid h-9 w-9 place-items-center hover:bg-teal-bright disabled:opacity-50 transition-colors"
+            >
+              ➔
+            </button>
+          </div>
+        </Card>
+      </div>
 
       {/* Confirmation Modal for Delete */}
       {itemToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-card rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 border border-line">
+          <div className="bg-card-strong rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 border border-line">
             <h3 className="text-lg font-bold text-ink mb-2">Delete File</h3>
             <p className="text-sm text-ink-soft mb-6">
               Are you sure you want to delete <span className="font-semibold text-ink">{itemToDelete.name}</span>? This action cannot be undone.
