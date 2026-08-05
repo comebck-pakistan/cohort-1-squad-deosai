@@ -7,6 +7,7 @@ import type {
   SellerRow,
 } from "@/lib/ai/types";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -44,6 +45,14 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Sign in to test the assistant." }, { status: 401 });
+    }
+
+    const { success } = await checkRateLimit(user.id, 5, 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute before sending another message." },
+        { status: 429 }
+      );
     }
 
     // 1. Prepare ilike conditions to search products in Supabase directly

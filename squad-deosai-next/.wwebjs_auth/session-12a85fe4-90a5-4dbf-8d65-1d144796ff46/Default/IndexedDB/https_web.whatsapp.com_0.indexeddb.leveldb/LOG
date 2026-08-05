@@ -1,0 +1,23 @@
+2026/08/05-12:59:46.138 239c Creating DB C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/08/05-12:59:46.161 239c Reusing MANIFEST C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/08/05-12:59:46.164 239c Recovering log #1318
+2026/08/05-12:59:46.236 239c Reusing old log C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/001318.log 
+2026/08/05-12:59:46.237 239c Delete type=2 #1248
+2026/08/05-12:59:46.237 239c Delete type=2 #1249
+2026/08/05-12:59:46.238 239c Delete type=2 #1254
+2026/08/05-12:59:46.238 239c Delete type=2 #1255
+2026/08/05-12:59:46.238 239c Delete type=2 #1256
+2026/08/05-12:59:46.238 239c Delete type=2 #1257
+2026/08/05-12:59:46.238 239c Delete type=2 #1258
+2026/08/05-12:59:46.238 239c Delete type=2 #1259
+2026/08/05-12:59:46.238 239c Delete type=2 #1260
+2026/08/05-12:59:46.238 239c Delete type=2 #1261
+2026/08/05-12:59:46.238 239c Delete type=2 #1262
+2026/08/05-12:59:46.238 239c Delete type=2 #1270
+2026/08/05-12:59:46.238 239c Delete type=2 #1309
+2026/08/05-12:59:46.238 239c Delete type=2 #1311
+2026/08/05-12:59:46.238 239c Delete type=2 #1313
+2026/08/05-12:59:46.238 239c Delete type=2 #1315
+2026/08/05-12:59:46.238 239c Delete type=2 #1317
+2026/08/05-12:59:46.238 239c Delete type=2 #1319
+2026/08/05-12:59:46.239 239c Delete type=2 #1320

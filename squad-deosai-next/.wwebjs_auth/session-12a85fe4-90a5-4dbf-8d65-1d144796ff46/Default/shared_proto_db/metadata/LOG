@@ -1,0 +1,4 @@
+2026/08/05-12:59:44.272 3914 Creating DB C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\shared_proto_db\metadata since it was missing.
+2026/08/05-12:59:44.286 3914 Reusing MANIFEST C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/08/05-12:59:44.287 3914 Recovering log #3
+2026/08/05-12:59:44.287 3914 Reusing old log C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\shared_proto_db\metadata/000003.log 
