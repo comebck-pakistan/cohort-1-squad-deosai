@@ -8,19 +8,19 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { useDemoMode, DemoModeSwitch } from "@/lib/demo-mode";
 import {
   fetchConversations,
   fetchMessages,
   insertMessage,
   updateConversationStatus,
+  markConversationAsRead,
   seedDatabase
 } from "@/lib/supabase-service";
 
 interface Message {
   id: string;
   sender: "customer" | "bot" | "seller";
-  body: string;
+  content: string;
   createdAt: string;
 }
 
@@ -30,148 +30,28 @@ interface Conversation {
   customerPhone: string;
   status: "needs-you" | "auto-replied" | "ordered";
   lastMessageAt: string;
+  unreadCount: number;
   messages: Message[];
 }
 
-const seedConversations: Conversation[] = [
-  {
-    id: "c_sana",
-    customerName: "Sana M.",
-    customerPhone: "+92 300 7712004",
-    status: "needs-you",
-    lastMessageAt: "09:01 AM",
-    messages: [
-      {
-        id: "m_sana_1",
-        sender: "customer",
-        body: "Can you make a custom nameplate necklace in rose gold with my daughter's name?",
-        createdAt: "09:01 AM",
-      },
-      {
-        id: "m_sana_2",
-        sender: "bot",
-        body: "I'm not sure if we can customize rose gold plate names. Let me hand this over to Meher Fatima to answer you shortly! 🌸",
-        createdAt: "09:01 AM",
-      },
-    ],
-  },
-  {
-    id: "c_ayesha",
-    customerName: "Ayesha K.",
-    customerPhone: "+92 321 8890021",
-    status: "auto-replied",
-    lastMessageAt: "02:47 AM",
-    messages: [
-      {
-        id: "m_ayesha_1",
-        sender: "customer",
-        body: "Assalam o alaikum, price of the gold hoops?",
-        createdAt: "02:47 AM",
-      },
-      {
-        id: "m_ayesha_2",
-        sender: "bot",
-        body: "Wa alaikum assalam! The Gold-tone Hoop Earrings are Rs. 1,900 (on sale — original Rs. 2,500). They're running low in stock right now. Would you like to order?",
-        createdAt: "02:47 AM",
-      },
-    ],
-  },
-  {
-    id: "c_bilal",
-    customerName: "Bilal R.",
-    customerPhone: "+92 333 4471190",
-    status: "ordered",
-    lastMessageAt: "06:21 PM",
-    messages: [
-      {
-        id: "m_bilal_1",
-        sender: "customer",
-        body: "Do you deliver to Multan? And the pendant necklace price?",
-        createdAt: "06:12 PM",
-      },
-      {
-        id: "m_bilal_2",
-        sender: "bot",
-        body: "Yes, we deliver nationwide via Leopards! The Layered Pendant Necklace is Rs. 1,200.",
-        createdAt: "06:13 PM",
-      },
-      {
-        id: "m_bilal_3",
-        sender: "customer",
-        body: "I want to place an order for the necklace.",
-        createdAt: "06:20 PM",
-      },
-      {
-        id: "m_bilal_4",
-        sender: "bot",
-        body: "Awesome! I've logged a COD order for Layered Pendant Necklace. Please click Confirm to lock it in.",
-        createdAt: "06:21 PM",
-      },
-      {
-        id: "m_bilal_5",
-        sender: "customer",
-        body: "Confirm",
-        createdAt: "06:21 PM",
-      },
-      {
-        id: "m_bilal_6",
-        sender: "bot",
-        body: "✅ Thank you! Your order has been confirmed. We'll dispatch it soon.",
-        createdAt: "06:21 PM",
-      },
-    ],
-  },
-  {
-    id: "c_zoya",
-    customerName: "Zoya T.",
-    customerPhone: "+92 311 2098443",
-    status: "auto-replied",
-    lastMessageAt: "11:58 PM",
-    messages: [
-      {
-        id: "m_zoya_1",
-        sender: "customer",
-        body: "What are your timings? Are you open now?",
-        createdAt: "11:58 PM",
-      },
-      {
-        id: "m_zoya_2",
-        sender: "bot",
-        body: "We are open Monday to Saturday from 11 AM to 8 PM. Since it is currently after hours, we will process any orders or queries first thing tomorrow morning!",
-        createdAt: "11:58 PM",
-      },
-    ],
-  },
-];
-
 export default function InboxPage() {
   const { user } = useAuth();
-  const { demoMode } = useDemoMode();
 
-  const [conversations, setConversations] = useState<Conversation[]>(seedConversations);
-  const [activeId, setActiveId] = useState<string>("c_sana");
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeId, setActiveId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "needs-you" | "replied">("all");
   const [draft, setDraft] = useState("");
   const [agentDraft, setAgentDraft] = useState("");
   const [isDrafting, setIsDrafting] = useState(false);
-  const [loadingLive, setLoadingLive] = useState(false);
+  const [loadingLive, setLoadingLive] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeChat = conversations.find((c) => c.id === activeId);
 
-  // Sync data on mount and demo mode change
+  // Sync data on mount
   const loadConversations = async () => {
-    if (demoMode) {
-      setConversations(seedConversations);
-      const exists = seedConversations.some((c) => c.id === activeId);
-      if (!exists && seedConversations.length > 0) {
-        setActiveId(seedConversations[0].id);
-      }
-      return;
-    }
-
     if (!user) return;
 
     try {
@@ -180,20 +60,32 @@ export default function InboxPage() {
       const mappedConvs: Conversation[] = [];
 
       for (const c of dbConvs) {
-        const dbMsgs = await fetchMessages(user.id, c.id);
+        let dbMsgs: any[] = [];
+        try {
+          dbMsgs = await fetchMessages(user.id, c.id);
+        } catch (msgErr) {
+          console.error("Failed to fetch messages for conversation:", c.id, msgErr);
+        }
+        
         const mappedMsgs: Message[] = dbMsgs.map((m) => ({
           id: m.id,
-          sender: m.author === "system" ? "bot" : (m.author as "customer" | "bot" | "seller"),
-          body: m.body,
+          sender: m.sender_type === "system" ? "bot" : (m.sender_type as "customer" | "bot" | "seller"),
+          content: m.content,
           createdAt: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         }));
 
+        let cName = c.customer_name?.trim();
+        if (!cName || cName === '.' || cName.toLowerCase() === 'unknown') {
+          cName = c.customer_phone || "Unknown Customer";
+        }
+
         mappedConvs.push({
           id: c.id,
-          customerName: c.customer_name || "Unknown",
+          customerName: cName,
           customerPhone: c.customer_phone || "",
           status: c.status as "needs-you" | "auto-replied" | "ordered",
           lastMessageAt: new Date(c.last_message_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          unreadCount: c.unread_count || 0,
           messages: mappedMsgs,
         });
       }
@@ -216,7 +108,7 @@ export default function InboxPage() {
 
   useEffect(() => {
     loadConversations();
-  }, [demoMode, user]);
+  }, [user]);
 
   // Seeding button trigger
   const handleSeedDatabase = async () => {
@@ -250,52 +142,54 @@ export default function InboxPage() {
     return true;
   });
 
-  // Handle manual reply send
+  // Handle manual reply send via API
   const handleSendReply = async () => {
-    if (!draft.trim() || !activeChat) return;
+    if (!draft.trim() || !activeChat || !user) return;
 
-    if (demoMode) {
-      const newMsg: Message = {
-        id: `msg_seller_${Date.now()}`,
-        sender: "seller",
-        body: draft.trim(),
-        createdAt: new Date().toLocaleTimeString("en-PK", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
-      };
-
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === activeChat.id
-            ? {
-                ...c,
-                status: "auto-replied",
-                lastMessageAt: newMsg.createdAt,
-                messages: [...c.messages, newMsg],
-              }
-            : c
-        )
-      );
-      setDraft("");
-      setAgentDraft("");
-      return;
-    }
-
-    if (!user) return;
+    const messageToSend = draft.trim();
+    // Optimistic UI updates could go here
+    setDraft("");
+    setAgentDraft("");
 
     try {
-      // 1. Insert message row into Supabase
-      await insertMessage(user.id, activeChat.id, draft.trim(), "seller", "outbound");
-      // 2. Mark conversation as replied
-      await updateConversationStatus(user.id, activeChat.id, "auto-replied");
-      setDraft("");
-      setAgentDraft("");
-      // 3. Reload conversations
+      const res = await fetch("/api/whatsapp/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sellerId: user.id,
+          conversationId: activeChat.id,
+          customerPhone: activeChat.customerPhone,
+          message: messageToSend
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to send message via API");
+      }
+
+      // Reload conversations to get the new message
       await loadConversations();
     } catch (err) {
-      console.error("Failed to insert outbound message:", err);
+      console.error("Failed to send outbound message:", err);
+      // Revert draft on error if needed
+      setDraft(messageToSend);
+      alert("Failed to send message. Please try again.");
+    }
+  };
+
+  const handleSelectChat = async (chat: Conversation) => {
+    setActiveId(chat.id);
+    if (chat.unreadCount > 0 && user) {
+      // Optimistically update local state
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === chat.id ? { ...c, unreadCount: 0 } : c
+        )
+      );
+      // Update DB in background
+      markConversationAsRead(user.id, chat.id).catch(err => {
+        console.error("Failed to mark chat as read:", err);
+      });
     }
   };
 
@@ -307,33 +201,19 @@ export default function InboxPage() {
 
     setTimeout(() => {
       let draftText = "";
-      if (demoMode) {
-        if (activeChat.id === "c_sana") {
-          draftText =
-            "Assalam o alaikum Sana! Yes, we can make custom nameplate necklaces in rose gold plating. It typically takes 5–7 working days for customization. The price is Rs. 2,200. Would you like to proceed with the order details?";
-        } else if (activeChat.id === "c_ayesha") {
-          draftText =
-            "Wa alaikum assalam Ayesha! The Gold Hoops are currently in stock for Rs. 1,900. Since you are in Lahore, delivery is completely free! Should I reserve a pair for you?";
-        } else if (activeChat.id === "c_zoya") {
-          draftText =
-            "Hi Zoya! We are currently open. How can we assist you with our catalog today?";
-        } else {
-          draftText =
-            "Hi! Thanks for reaching out to Meher Handmade. How can we assist you with our catalog today?";
-        }
+      
+      // Live Mode generic prompt draft builder based on last customer question
+      const lastCustMsg = [...activeChat.messages].reverse().find(m => m.sender === "customer");
+      const promptSeed = lastCustMsg ? lastCustMsg.content.toLowerCase() : "";
+      
+      if (promptSeed.includes("price") || promptSeed.includes("kya rate") || promptSeed.includes("charges")) {
+        draftText = "Assalam o alaikum! We will check the price details for your requested jewelry items and get back to you shortly. Shipping is a flat Rs. 150.";
+      } else if (promptSeed.includes("delivery") || promptSeed.includes("deliver")) {
+        draftText = "Assalam o alaikum! Yes, we deliver nationwide in Pakistan within 2-3 working days. Leopards COD option is fully available.";
       } else {
-        // Live Mode generic prompt draft builder based on last customer question
-        const lastCustMsg = [...activeChat.messages].reverse().find(m => m.sender === "customer");
-        const promptSeed = lastCustMsg ? lastCustMsg.body.toLowerCase() : "";
-        
-        if (promptSeed.includes("price") || promptSeed.includes("kya rate") || promptSeed.includes("charges")) {
-          draftText = "Assalam o alaikum! We will check the price details for your requested jewelry items and get back to you shortly. Shipping is a flat Rs. 150.";
-        } else if (promptSeed.includes("delivery") || promptSeed.includes("deliver")) {
-          draftText = "Assalam o alaikum! Yes, we deliver nationwide in Pakistan within 2-3 working days. Leopards COD option is fully available.";
-        } else {
-          draftText = "Wa alaikum assalam! Let me check this catalog detail for you. I will reply here in just a minute.";
-        }
+        draftText = "Wa alaikum assalam! Let me check this catalog detail for you. I will reply here in just a minute.";
       }
+      
       setDraft(draftText);
       setIsDrafting(false);
     }, 800);
@@ -353,9 +233,6 @@ export default function InboxPage() {
           <p className="text-sm text-ink-soft mt-1">
             Monitor auto-responses and reply to your WhatsApp customers directly.
           </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DemoModeSwitch />
         </div>
       </div>
 
@@ -424,7 +301,7 @@ export default function InboxPage() {
                 return (
                   <button
                     key={chat.id}
-                    onClick={() => setActiveId(chat.id)}
+                    onClick={() => handleSelectChat(chat)}
                     className={cn(
                       "w-full text-left p-4 flex gap-3 items-start transition-colors",
                       active ? "bg-paper-deep" : "hover:bg-paper/30"
@@ -443,7 +320,7 @@ export default function InboxPage() {
                         </span>
                       </div>
                       <p className="text-xs text-ink-soft truncate mt-0.5">
-                        {lastMsg ? lastMsg.body : "No messages"}
+                        {lastMsg ? lastMsg.content : "No messages"}
                       </p>
                       <div className="mt-2 flex items-center justify-between">
                         <Badge tone={meta.tone}>{meta.label}</Badge>
@@ -452,6 +329,11 @@ export default function InboxPage() {
                         </span>
                       </div>
                     </div>
+                    {chat.unreadCount > 0 && (
+                      <span className="shrink-0 flex h-5 w-5 items-center justify-center rounded-full bg-teal text-[10px] font-bold text-white shadow-sm">
+                        {chat.unreadCount}
+                      </span>
+                    )}
                   </button>
                 );
               })
@@ -461,7 +343,7 @@ export default function InboxPage() {
 
         {/* Right Column: Chat View */}
         <div className="flex flex-col min-h-0 bg-paper/20">
-          {!demoMode && conversations.length === 0 && !loadingLive ? (
+          {conversations.length === 0 && !loadingLive ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 select-none space-y-4">
               <span className="text-4xl">💬</span>
               <p className="text-sm font-semibold text-ink">Your Live Inbox is empty</p>
@@ -498,6 +380,19 @@ export default function InboxPage() {
                     {statusMeta[activeChat.status]?.label || activeChat.status}
                   </Badge>
                   <span className="text-xs text-ink-faint">· WhatsApp Channel</span>
+                  
+                  {/* Open WhatsApp Button */}
+                  {activeChat.customerPhone && (
+                    <a
+                      href={`https://wa.me/${activeChat.customerPhone.replace(/[^0-9]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-2 inline-flex items-center justify-center rounded-lg border border-teal text-teal hover:bg-teal-soft/20 px-3 py-1.5 text-xs font-semibold transition-colors shadow-sm"
+                      title="Open chat in WhatsApp Web or App"
+                    >
+                      Open WhatsApp
+                    </a>
+                  )}
                 </div>
               </div>
 
@@ -529,7 +424,7 @@ export default function InboxPage() {
                             : "bg-card-strong border border-line text-ink rounded-bl-none"
                         )}
                       >
-                        <p className="whitespace-pre-wrap">{msg.body}</p>
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
                         <div className="mt-1.5 flex items-center gap-1.5 text-[9px] uppercase tracking-wide opacity-70">
                           <span>
                             {isSeller ? "You" : isBot ? "🤖 AI Agent" : "Customer"}

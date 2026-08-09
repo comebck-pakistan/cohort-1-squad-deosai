@@ -94,6 +94,8 @@ export default function SetupPage() {
   // Setup — WhatsApp Coexistence Status
   const [whatsappRequested, setWhatsappRequested] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [waStatus, setWaStatus] = useState<'disconnected' | 'initializing' | 'qr_ready' | 'connected'>('disconnected');
+  const [waQrDataUrl, setWaQrDataUrl] = useState<string | null>(null);
 
   const visibleKnowledgeList = knowledgeList.filter(
     (k) => k.id !== "k_onboarding_profile" && k.id !== "k_products_table"
@@ -236,6 +238,31 @@ export default function SetupPage() {
 
     loadData();
   }, [user]);
+
+  // WhatsApp Polling
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeTab === "whatsapp" && waStatus !== "connected" && waStatus !== "disconnected") {
+      const fetchStatus = async () => {
+        try {
+          const res = await fetch("/api/whatsapp/status");
+          if (res.ok) {
+            const data = await res.json();
+            setWaStatus(data.status);
+            if (data.qrDataUrl) {
+              setWaQrDataUrl(data.qrDataUrl);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch WhatsApp status", error);
+        }
+      };
+      
+      fetchStatus();
+      interval = setInterval(fetchStatus, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTab, waStatus]);
 
   const [savingConfig, setSavingConfig] = useState(false);
   const [configSaveSuccess, setConfigSaveSuccess] = useState(false);
@@ -687,15 +714,23 @@ export default function SetupPage() {
 
 
   const handleRequestWhatsApp = async () => {
-    if (!whatsappNumber.trim()) return;
-    setWhatsappRequested(true);
+    if (whatsappNumber.trim()) {
+      try {
+        const supabase = createClient();
+        await supabase
+          .from("sellers")
+          .update({ phone: whatsappNumber })
+          .eq("id", user?.id || "");
+      } catch {}
+    }
+    
+    setWaStatus('initializing');
     try {
-      const supabase = createClient();
-      await supabase
-        .from("sellers")
-        .update({ whatsapp_requested: true, phone: whatsappNumber })
-        .eq("id", user?.id || "");
-    } catch {}
+      await fetch('/api/whatsapp/connect', { method: 'POST' });
+    } catch (error) {
+      console.error('Failed to connect WhatsApp', error);
+      setWaStatus('disconnected');
+    }
   };
 
   const handleSendMessage = async () => {
@@ -1565,17 +1600,19 @@ export default function SetupPage() {
                       <span className="text-2xl">💬</span>
                       <div>
                         <p className="text-sm font-semibold text-ink">
-                          {whatsappRequested ? "Connection Pending" : "Not connected"}
+                          {waStatus === 'connected' ? "Connected" : waStatus === 'qr_ready' ? "Scan QR Code" : waStatus === 'initializing' ? "Initializing..." : "Not connected"}
                         </p>
                         <p className="font-mono text-xs text-ink-soft">{whatsappNumber || "No number connected"}</p>
                       </div>
                     </div>
-                    {whatsappRequested ? (
-                      <Badge tone="marigold">Setup requested</Badge>
+                    {waStatus === 'connected' ? (
+                      <Badge tone="live">Connected</Badge>
+                    ) : waStatus !== 'disconnected' ? (
+                      <Badge tone="marigold">{waStatus}</Badge>
                     ) : null}
                   </div>
 
-                  {!whatsappRequested ? (
+                  {waStatus === 'disconnected' ? (
                     <div className="space-y-3">
                       <Label htmlFor="wa-num">Submit WhatsApp Business Number</Label>
                       <div className="flex gap-2">
@@ -1589,9 +1626,20 @@ export default function SetupPage() {
                         <Button onClick={handleRequestWhatsApp}>Connect</Button>
                       </div>
                     </div>
+                  ) : waStatus === 'qr_ready' && waQrDataUrl ? (
+                    <div className="flex flex-col items-center space-y-4 py-4">
+                      <p className="text-sm text-ink-soft">Scan this QR code with your WhatsApp app to connect.</p>
+                      <div className="bg-white p-2 rounded-xl shadow-sm border border-line">
+                        <img src={waQrDataUrl} alt="WhatsApp QR Code" className="w-48 h-48" />
+                      </div>
+                    </div>
+                  ) : waStatus === 'initializing' ? (
+                    <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft flex items-center justify-center h-48">
+                      Starting WhatsApp client... Please wait.
+                    </div>
                   ) : (
                     <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft">
-                      Connection has been requested. The Deosai team will configure Meta Cloud API coexistence for your business shortly.
+                      Your WhatsApp number is connected and running concurrently.
                     </div>
                   )}
                 </CardBody>

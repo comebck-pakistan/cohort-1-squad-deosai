@@ -9,6 +9,7 @@ export interface DBConversation {
   customer_phone: string;
   status: string; // 'needs-you' | 'auto-replied' | 'ordered'
   last_message_at: string;
+  unread_count: number;
   created_at: string;
 }
 
@@ -16,10 +17,9 @@ export interface DBMessage {
   id: string;
   seller_id: string;
   conversation_id: string;
-  direction: 'inbound' | 'outbound';
-  author: 'customer' | 'bot' | 'seller' | 'system';
-  body: string;
-  status: string;
+  sender_type: 'customer' | 'bot' | 'seller' | 'system';
+  content: string;
+  read: boolean;
   created_at: string;
 }
 
@@ -72,9 +72,9 @@ export async function fetchMessages(sellerId: string, conversationId: string): P
 export async function insertMessage(
   sellerId: string,
   conversationId: string,
-  body: string,
-  author: "customer" | "bot" | "seller" | "system",
-  direction: "inbound" | "outbound"
+  content: string,
+  senderType: "customer" | "bot" | "seller" | "system",
+  read: boolean = false
 ): Promise<DBMessage> {
   // 1. Insert message row
   const { data, error } = await supabase
@@ -82,10 +82,9 @@ export async function insertMessage(
     .insert({
       seller_id: sellerId,
       conversation_id: conversationId,
-      body,
-      author,
-      direction,
-      status: "sent"
+      content,
+      sender_type: senderType,
+      read
     })
     .select()
     .single();
@@ -124,6 +123,22 @@ export async function updateConversationStatus(
   if (error) {
     console.error("Error updating conversation status:", error);
     throw error;
+  }
+}
+
+/** Mark conversation as read (reset unread_count) */
+export async function markConversationAsRead(
+  sellerId: string,
+  conversationId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("conversations")
+    .update({ unread_count: 0 })
+    .eq("id", conversationId)
+    .eq("seller_id", sellerId);
+
+  if (error) {
+    console.error("Error marking conversation as read:", error);
   }
 }
 
@@ -185,6 +200,7 @@ export async function seedDatabase(sellerId: string): Promise<void> {
       customer_phone: "+92 300 7712004",
       status: "needs-you",
       last_message_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(), // 10 mins ago
+      unread_count: 1,
     },
     {
       seller_id: sellerId,
@@ -194,6 +210,7 @@ export async function seedDatabase(sellerId: string): Promise<void> {
       customer_phone: "+92 321 8890021",
       status: "auto-replied",
       last_message_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1 hr ago
+      unread_count: 0,
     },
     {
       seller_id: sellerId,
@@ -203,6 +220,7 @@ export async function seedDatabase(sellerId: string): Promise<void> {
       customer_phone: "+92 333 4471190",
       status: "ordered",
       last_message_at: new Date(Date.now() - 120 * 60 * 1000).toISOString(), // 2 hrs ago
+      unread_count: 0,
     },
     {
       seller_id: sellerId,
@@ -212,6 +230,7 @@ export async function seedDatabase(sellerId: string): Promise<void> {
       customer_phone: "+92 311 2098443",
       status: "auto-replied",
       last_message_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+      unread_count: 0,
     }
   ];
 
@@ -237,67 +256,60 @@ export async function seedDatabase(sellerId: string): Promise<void> {
     {
       seller_id: sellerId,
       conversation_id: sana.id,
-      direction: "inbound" as const,
-      author: "customer" as const,
-      body: "Hi! Can you make a custom nameplate necklace in rose gold plating with my daughter's name?",
-      status: "read",
+      sender_type: "customer" as const,
+      content: "Hi! Can you make a custom nameplate necklace in rose gold plating with my daughter's name?",
+      read: false,
       created_at: new Date(Date.now() - 11 * 60 * 1000).toISOString()
     },
     // Ayesha K
     {
       seller_id: sellerId,
       conversation_id: ayesha.id,
-      direction: "inbound" as const,
-      author: "customer" as const,
-      body: "Assalam o alaikum! Do you deliver Payal Anklets to Multan? If yes, what are the delivery charges?",
-      status: "read",
+      sender_type: "customer" as const,
+      content: "Assalam o alaikum! Do you deliver Payal Anklets to Multan? If yes, what are the delivery charges?",
+      read: true,
       created_at: new Date(Date.now() - 65 * 60 * 1000).toISOString()
     },
     {
       seller_id: sellerId,
       conversation_id: ayesha.id,
-      direction: "outbound" as const,
-      author: "bot" as const,
-      body: "Assalam o alaikum Ayesha! Yes, we deliver nationwide to Multan via Leopards courier. Delivery takes 2-3 working days. Delivery charges are a flat Rs. 150.",
-      status: "sent",
+      sender_type: "bot" as const,
+      content: "Assalam o alaikum Ayesha! Yes, we deliver nationwide to Multan via Leopards courier. Delivery takes 2-3 working days. Delivery charges are a flat Rs. 150.",
+      read: true,
       created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString()
     },
     // Bilal R
     {
       seller_id: sellerId,
       conversation_id: bilal.id,
-      direction: "inbound" as const,
-      author: "customer" as const,
-      body: "I want to confirm order for Beaded Charm Bracelet. Phone is +923334471190. Shipping to Lahore.",
-      status: "read",
+      sender_type: "customer" as const,
+      content: "I want to confirm order for Beaded Charm Bracelet. Phone is +923334471190. Shipping to Lahore.",
+      read: true,
       created_at: new Date(Date.now() - 130 * 60 * 1000).toISOString()
     },
     {
       seller_id: sellerId,
       conversation_id: bilal.id,
-      direction: "outbound" as const,
-      author: "bot" as const,
-      body: "Assalam o alaikum Bilal! Thank you for choosing Meher Handmade. Your order for the Beaded Charm Bracelet (PKR 650) is being processed. Delivery takes 2-3 working days.",
-      status: "sent",
+      sender_type: "bot" as const,
+      content: "Assalam o alaikum Bilal! Thank you for choosing Meher Handmade. Your order for the Beaded Charm Bracelet (PKR 650) is being processed. Delivery takes 2-3 working days.",
+      read: true,
       created_at: new Date(Date.now() - 120 * 60 * 1000).toISOString()
     },
     // Zoya T
     {
       seller_id: sellerId,
       conversation_id: zoya.id,
-      direction: "inbound" as const,
-      author: "customer" as const,
-      body: "Is the Gold-tone Hoop Earrings available?",
-      status: "read",
+      sender_type: "customer" as const,
+      content: "Is the Gold-tone Hoop Earrings available?",
+      read: true,
       created_at: new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString()
     },
     {
       seller_id: sellerId,
       conversation_id: zoya.id,
-      direction: "outbound" as const,
-      author: "bot" as const,
-      body: "Hello Zoya! Yes, Gold-tone Hoop Earrings are in stock and available for order. The price is Rs. 1,900 (discounted from Rs. 2,500).",
-      status: "sent",
+      sender_type: "bot" as const,
+      content: "Hello Zoya! Yes, Gold-tone Hoop Earrings are in stock and available for order. The price is Rs. 1,900 (discounted from Rs. 2,500).",
+      read: true,
       created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     }
   ];
