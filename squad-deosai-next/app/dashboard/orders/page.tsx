@@ -7,27 +7,31 @@ import { Input } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { cn, formatPKR } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-import { useDemoMode, DemoModeSwitch } from "@/lib/demo-mode";
-import { orders as seedOrders, type Order, type OrderStatus } from "@/lib/mock-data";
 import { fetchOrders, updateOrderStatus, seedDatabase } from "@/lib/supabase-service";
+
+type OrderStatus = "pending" | "confirmed" | "cancelled";
+
+interface Order {
+  id: string;
+  customerName: string;
+  customerPhone: string;
+  items: string;
+  total: number;
+  status: OrderStatus;
+  createdAt: string;
+  source: string;
+}
 
 export default function OrdersPage() {
   const { user } = useAuth();
-  const { demoMode } = useDemoMode();
 
-  const [orders, setOrders] = useState<Order[]>(seedOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [search, setSearch] = useState("");
-  const [loadingLive, setLoadingLive] = useState(false);
+  const [loadingLive, setLoadingLive] = useState(true);
   const [seeding, setSeeding] = useState(false);
 
-  // Sync data on mount and demo mode change
   const loadOrders = async () => {
-    if (demoMode) {
-      setOrders(seedOrders);
-      return;
-    }
-
     if (!user) return;
 
     try {
@@ -57,7 +61,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     loadOrders();
-  }, [demoMode, user]);
+  }, [user]);
 
   // Seeding button trigger
   const handleSeedDatabase = async () => {
@@ -85,13 +89,6 @@ export default function OrdersPage() {
   });
 
   const handleUpdateStatus = async (id: string, newStatus: OrderStatus) => {
-    if (demoMode) {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === id ? { ...o, status: newStatus } : o))
-      );
-      return;
-    }
-
     if (!user) return;
 
     try {
@@ -124,9 +121,6 @@ export default function OrdersPage() {
             COD order confirmations from your store. Keep track of customer replies and manage shipments.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <DemoModeSwitch />
-        </div>
       </div>
 
       {/* Explainer */}
@@ -147,7 +141,7 @@ export default function OrdersPage() {
       </Card>
 
       {/* Seeding callout for Live Mode empty orders database */}
-      {!demoMode && !loadingLive && orders.length === 0 && (
+      {!loadingLive && orders.length === 0 && (
         <Card className="border-teal-soft bg-teal-soft/5">
           <CardBody className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="space-y-1">

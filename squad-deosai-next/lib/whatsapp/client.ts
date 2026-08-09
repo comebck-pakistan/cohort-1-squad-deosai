@@ -3,6 +3,12 @@ import { Client, LocalAuth } from 'whatsapp-web.js';
 import qrcodeTerminal from 'qrcode-terminal';
 import qrcode from 'qrcode';
 import { handleIncomingMessage } from './handlers';
+import fs from 'fs';
+import path from 'path';
+import { exec } from 'child_process';
+import util from 'util';
+
+const execPromise = util.promisify(exec);
 
 export type WhatsAppStatus = 'disconnected' | 'initializing' | 'qr_ready' | 'connected';
 
@@ -17,6 +23,27 @@ export interface WhatsAppClientState {
 // For production, a dedicated worker process is recommended.
 export const whatsappClients = new Map<string, WhatsAppClientState>();
 
+async function cleanupWhatsAppSession(sellerId: string) {
+  // Delete session folder
+  const sessionPath = path.join(process.cwd(), '.wwebjs_auth', `session-${sellerId}`);
+  if (fs.existsSync(sessionPath)) {
+    try {
+      fs.rmSync(sessionPath, { recursive: true, force: true });
+      console.log(`[WhatsApp] Deleted session folder for ${sellerId}`);
+    } catch (err) {
+      console.error(`[WhatsApp] Error deleting session folder for ${sellerId}:`, err);
+    }
+  }
+
+  // Kill stray headless chrome processes on Windows
+  try {
+    await execPromise('wmic process where "name=\'chrome.exe\' and commandline like \'%headless%\'" call terminate');
+    console.log(`[WhatsApp] Cleaned up stray headless Chrome processes.`);
+  } catch (err) {
+    // Ignore errors if no processes found
+  }
+}
+
 export async function initializeWhatsAppClient(sellerId: string): Promise<WhatsAppClientState> {
   const existing = whatsappClients.get(sellerId);
   if (existing && existing.status !== 'disconnected') {
@@ -27,6 +54,8 @@ export async function initializeWhatsAppClient(sellerId: string): Promise<WhatsA
   whatsappClients.set(sellerId, state);
 
   console.log(`[WhatsApp] Initializing client for seller ${sellerId}...`);
+
+  await cleanupWhatsAppSession(sellerId);
 
   const client = new Client({
     authStrategy: new LocalAuth({ clientId: sellerId }),
@@ -91,4 +120,19 @@ export async function initializeWhatsAppClient(sellerId: string): Promise<WhatsA
 
 export function getWhatsAppStatus(sellerId: string): WhatsAppClientState {
   return whatsappClients.get(sellerId) || { status: 'disconnected' };
+}
+
+export async function logoutWhatsAppClient(sellerId: string): Promise<void> {
+  const existing = whatsappClients.get(sellerId);
+  if (existing?.client) {
+    try {
+      await existing.client.destroy();
+      console.log(`[WhatsApp] Destroyed client for ${sellerId}`);
+    } catch (err) {
+      console.error(`[WhatsApp] Error destroying client for ${sellerId}:`, err);
+    }
+  }
+  whatsappClients.delete(sellerId);
+
+  await cleanupWhatsAppSession(sellerId);
 }

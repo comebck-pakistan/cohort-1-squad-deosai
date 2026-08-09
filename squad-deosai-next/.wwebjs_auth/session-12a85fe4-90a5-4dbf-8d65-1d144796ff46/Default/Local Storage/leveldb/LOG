@@ -1,4 +1,2 @@
-2026/08/05-12:59:44.193 3fac Creating DB C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\Local Storage\leveldb since it was missing.
-2026/08/05-12:59:44.232 3fac Reusing MANIFEST C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\Local Storage\leveldb/MANIFEST-000001
-2026/08/05-12:59:44.234 3fac Recovering log #3
-2026/08/05-12:59:44.242 3fac Reusing old log C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\Local Storage\leveldb/000003.log 
+2026/08/09-13:59:59.037 47b0 Creating DB C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\Local Storage\leveldb since it was missing.
+2026/08/09-13:59:59.131 47b0 Reusing MANIFEST C:\Users\P\cohort-1-squad-deosai\squad-deosai-next\.wwebjs_auth\session-12a85fe4-90a5-4dbf-8d65-1d144796ff46\Default\Local Storage\leveldb/MANIFEST-000001

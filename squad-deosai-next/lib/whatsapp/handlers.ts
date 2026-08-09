@@ -111,6 +111,81 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
       products = (fallbackProducts.data || []) as ProductRow[];
     }
 
+    // ==========================================
+    // DB LOGIC: Save incoming message to Inbox
+    // ==========================================
+    const rawId = msg.from.split('@')[0];
+    let cleanPhone = rawId.replace(/[^0-9]/g, '');
+
+    // Issue 4: Extract correct number, handle PK numbers
+    if (cleanPhone.startsWith('03') && cleanPhone.length === 11) {
+      cleanPhone = '92' + cleanPhone.substring(1);
+    } else if (cleanPhone.startsWith('3') && cleanPhone.length === 10) {
+      cleanPhone = '92' + cleanPhone;
+    }
+
+    const customerPhoneStr = '+' + cleanPhone;
+    let customerNameStr = customerPhoneStr;
+    try {
+      const contact = await msg.getContact();
+      if (contact?.pushname) {
+        customerNameStr = contact.pushname;
+      }
+    } catch (e) {}
+
+    let { data: conversation } = await supabase
+      .from('conversations')
+      .select('id, unread_count')
+      .eq('seller_id', sellerId)
+      .eq('external_id', msg.from)
+      .maybeSingle();
+
+    if (!conversation) {
+      const { data: newConv } = await supabase
+        .from('conversations')
+        .insert({
+          seller_id: sellerId,
+          channel: 'whatsapp',
+          external_id: msg.from,
+          customer_name: customerNameStr,
+          customer_phone: customerPhoneStr,
+          status: 'needs-you',
+          last_message_at: new Date().toISOString(),
+          unread_count: 1
+        })
+        .select('id, unread_count')
+        .single();
+      conversation = newConv;
+    } else {
+      await supabase
+        .from('conversations')
+        .update({
+          status: 'needs-you',
+          last_message_at: new Date().toISOString(),
+          customer_name: customerNameStr,
+          unread_count: (conversation.unread_count || 0) + 1,
+        })
+        .eq('id', conversation.id);
+    }
+
+    if (conversation) {
+      const { error: msgInsertError } = await supabase
+        .from('messages')
+        .insert({
+          seller_id: sellerId,
+          conversation_id: conversation.id,
+          sender_type: 'customer',
+          content: messageText,
+          read: false
+        });
+      
+      if (msgInsertError) {
+        console.error(`[WhatsApp] ❌ Error saving customer message to DB:`, msgInsertError);
+      }
+    } else {
+      console.error(`[WhatsApp] ❌ No conversation found or created, skipping message insert.`);
+    }
+
     console.log(`[WhatsApp] 🤖 Generating AI reply for seller ${sellerId}...`);
     
     // Call the same function used by the Playground
@@ -126,6 +201,37 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
       console.log(`[WhatsApp] 📤 AI Reply generated: "${aiResponse.reply}"`);
       await msg.reply(aiResponse.reply);
       console.log(`[WhatsApp] ✅ Reply successfully sent to ${msg.from}`);
+
+      // ==========================================
+      // DB LOGIC: Save AI reply to Inbox
+      // ==========================================
+      if (conversation) {
+        const { error: botMsgError } = await supabase
+          .from('messages')
+          .insert({
+            seller_id: sellerId,
+            conversation_id: conversation.id,
+            sender_type: 'bot',
+            content: aiResponse.reply,
+            read: true
+          });
+          
+        if (botMsgError) {
+          console.error(`[WhatsApp] ❌ Error saving bot message to DB:`, botMsgError);
+        }
+
+        const { error: convUpdateError } = await supabase
+          .from('conversations')
+          .update({
+            status: 'auto-replied',
+            last_message_at: new Date().toISOString(),
+          })
+          .eq('id', conversation.id);
+          
+        if (convUpdateError) {
+          console.error(`[WhatsApp] ❌ Error updating conversation status:`, convUpdateError);
+        }
+      }
     } else {
       console.log(`[WhatsApp] ⚠️ AI chose not to reply or handoff was triggered without a message.`);
     }
