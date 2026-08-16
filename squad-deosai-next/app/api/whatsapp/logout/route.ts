@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { logoutWhatsAppClient } from '@/lib/whatsapp/client';
 import { createClient } from '@/lib/supabase/server';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[WhatsApp Logout API Error]', error);
+    logger.error('[WhatsApp Logout API Error]', { error });
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { AuthShell } from '@/components/auth/AuthShell'
-import { Button } from '@/components/ui/Button'
+import { Button, ButtonLink } from '@/components/ui/Button'
 import { Input, Label } from '@/components/ui/Field'
 
 export default function ForgotPasswordPage() {
@@ -60,11 +60,9 @@ export default function ForgotPasswordPage() {
                                 </p>
                             </div>
                             
-                            <Button asChild className="w-full" size="lg">
-                                <Link href="/auth/login">
-                                    Back to Login
-                                </Link>
-                            </Button>
+                            <ButtonLink href="/auth/login" className="w-full" size="lg">
+                                Back to Login
+                            </ButtonLink>
                         </div>
                     ) : (
                         <form onSubmit={handleReset} className="space-y-5">

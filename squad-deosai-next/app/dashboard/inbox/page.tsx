@@ -16,6 +16,7 @@ import {
   markConversationAsRead,
   seedDatabase
 } from "@/lib/supabase-service";
+import { useSupabaseRealtime } from "@/lib/supabase/realtime";
 
 interface Message {
   id: string;
@@ -46,6 +47,7 @@ export default function InboxPage() {
   const [isDrafting, setIsDrafting] = useState(false);
   const [loadingLive, setLoadingLive] = useState(true);
   const [seeding, setSeeding] = useState(false);
+  const [toast, setToast] = useState<{message: string; visible: boolean}>({ message: "", visible: false });
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const activeChat = conversations.find((c) => c.id === activeId);
@@ -109,6 +111,17 @@ export default function InboxPage() {
   useEffect(() => {
     loadConversations();
   }, [user]);
+
+  useSupabaseRealtime("messages", user ? `seller_id=eq.${user.id}` : null, (payload) => {
+    if (payload.eventType === "INSERT") {
+      const newMsg = payload.new;
+      if (newMsg.direction === "inbound" || newMsg.author === "customer" || newMsg.sender_type === "customer") {
+        setToast({ message: "New message received!", visible: true });
+        setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
+      }
+      loadConversations();
+    }
+  });
 
   // Seeding button trigger
   const handleSeedDatabase = async () => {
@@ -491,6 +504,12 @@ export default function InboxPage() {
           )}
         </div>
       </div>
+      
+      {toast.visible && (
+        <div className="fixed bottom-6 right-6 bg-teal text-white px-5 py-3 rounded-lg shadow-xl z-50 text-sm font-semibold transition-opacity duration-300">
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

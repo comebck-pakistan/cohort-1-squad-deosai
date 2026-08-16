@@ -1,0 +1,243 @@
+2026-08-15 13:53:23 [INFO]: 
+=== AI DEBUG LOG === 
+2026-08-15 13:53:23 [INFO]: [DEBUG] Supabase ilike tokens: {"0":"hii"}
+2026-08-15 13:53:23 [INFO]: [DEBUG] Products fetched from Supabase: 6 
+2026-08-15 13:53:23 [INFO]: [DEBUG] ✅ First product fetched: Gold Plated Chain 
+2026-08-15 13:53:24 [INFO]: [FAST-PATH GREETING 0-TOKENS] Intercepted pure greeting "hii" for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 13:53:44 [INFO]: 
+=== AI DEBUG LOG === 
+2026-08-15 13:53:44 [INFO]: [DEBUG] Supabase ilike tokens: {"0":"the","1":"gold","2":"plated","3":"ring"}
+2026-08-15 13:53:44 [INFO]: [DEBUG] Products fetched from Supabase: 4 
+2026-08-15 13:53:44 [INFO]: [DEBUG] ✅ First product fetched: Gold Plated Chain 
+2026-08-15 13:53:48 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1426 | Prompt: 1401 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 13:54:02 [INFO]: 
+=== AI DEBUG LOG === 
+2026-08-15 13:54:02 [INFO]: [DEBUG] Supabase ilike tokens: {"0":"are","1":"your","2":"delivery","3":"charges"}
+2026-08-15 13:54:02 [INFO]: [DEBUG] Products fetched from Supabase: 6 
+2026-08-15 13:54:02 [INFO]: [DEBUG] ✅ First product fetched: Gold Plated Chain 
+2026-08-15 13:54:05 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1536 | Prompt: 1506 | Cached: 1152 | Cache Hit Rate: 76.5% 
+2026-08-15 14:12:24 [INFO]: [WhatsApp] Initializing client for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:12:24 [INFO]: [WhatsApp] Deleted session folder for 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:12:25 [INFO]: [WhatsApp] Cleaned up stray headless Chrome processes. 
+2026-08-15 14:12:33 [INFO]: [WhatsApp] QR generated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Authenticated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Authenticated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Authenticated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Authenticated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Authenticated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:38 [INFO]: [WhatsApp] Client ready for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 14:15:44 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "https://www.instagram.com/p/Db-0wecNSPb/?igsh=cTd2OHYzcTcyc2Vw" 
+2026-08-15 14:15:46 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:15:48 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1227 | Prompt: 1186 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:15:48 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:15:49 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:10 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Mubarak ho" 
+2026-08-15 14:16:10 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "3 ghante ka solution" 
+2026-08-15 14:16:11 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "but I would recommend keh setup zaroor krlena on your laptop, as you would have to do your assignments projects on your personal pc/laptop" 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "fast knew what they were doing" 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Lol" 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Which setup man?" 
+2026-08-15 14:16:12 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1190 | Prompt: 1161 | Cached: 1024 | Cache Hit Rate: 88.2% 
+2026-08-15 14:16:12 [INFO]: [WhatsApp] 📤 AI Reply generated: "Shukriya! Aapko bhi mubarak ho!" 
+2026-08-15 14:16:13 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:13 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "bro this is Khi campus 🥀" 
+2026-08-15 14:16:13 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:13 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:13 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:14 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Oh shi" 
+2026-08-15 14:16:14 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:14 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:14 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1203 | Prompt: 1162 | Cached: 1024 | Cache Hit Rate: 88.1% 
+2026-08-15 14:16:14 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:15 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1204 | Prompt: 1163 | Cached: 1024 | Cache Hit Rate: 88.0% 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:15 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1228 | Prompt: 1187 | Cached: 1024 | Cache Hit Rate: 86.3% 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:15 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1199 | Prompt: 1158 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:15 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1206 | Prompt: 1165 | Cached: 1024 | Cache Hit Rate: 87.9% 
+2026-08-15 14:16:15 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:16 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:16 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:16 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1202 | Prompt: 1161 | Cached: 1024 | Cache Hit Rate: 88.2% 
+2026-08-15 14:16:16 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:16 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:16 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:16 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:17 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:17 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:38 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "like Dev C++ etc ..." 
+2026-08-15 14:16:38 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Karachi walo ko orientation pe ye b mila" 
+2026-08-15 14:16:38 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "coffee makes me more sleepy😔💔" 
+2026-08-15 14:16:39 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "" 
+2026-08-15 14:16:39 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:39 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:40 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:40 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Same twin" 
+2026-08-15 14:16:40 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "chai >>>" 
+2026-08-15 14:16:40 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "yeh hui naa achi btf" 
+2026-08-15 14:16:41 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1207 | Prompt: 1167 | Cached: 1024 | Cache Hit Rate: 87.7% 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Language kon si use hoti hai waisay?" 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:41 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1207 | Prompt: 1166 | Cached: 1024 | Cache Hit Rate: 87.8% 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:41 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:42 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1204 | Prompt: 1163 | Cached: 1024 | Cache Hit Rate: 88.0% 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:42 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 933 | Prompt: 892 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:42 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1184 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:42 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Coffee lowkey overrated" 
+2026-08-15 14:16:43 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1208 | Prompt: 1165 | Cached: 1024 | Cache Hit Rate: 87.9% 
+2026-08-15 14:16:43 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:43 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 929 | Prompt: 901 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:16:43 [INFO]: [WhatsApp] 📤 AI Reply generated: "Hum English aur Urdu dono mein madad karte hain." 
+2026-08-15 14:16:44 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:44 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:44 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:44 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Nice finger u got there" 
+2026-08-15 14:16:44 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Humne game nhi kheli thi😓" 
+2026-08-15 14:16:45 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1203 | Prompt: 1162 | Cached: 1024 | Cache Hit Rate: 88.1% 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "IKR" 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Ayo ts reddit" 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Chai 🔛🔝" 
+2026-08-15 14:16:45 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "😭😭" 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "C++" 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:46 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1203 | Prompt: 1162 | Cached: 1024 | Cache Hit Rate: 88.1% 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:46 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:47 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1206 | Prompt: 1166 | Cached: 1024 | Cache Hit Rate: 87.8% 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "" 
+2026-08-15 14:16:47 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:47 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1202 | Prompt: 1161 | Cached: 1024 | Cache Hit Rate: 88.2% 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:47 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:48 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1187 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] 📤 AI Reply generated: "I'm here to help! How can I assist you today?" 
+2026-08-15 14:16:48 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 937 | Prompt: 896 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "jbh" 
+2026-08-15 14:16:48 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:48 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:49 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Istg" 
+2026-08-15 14:16:49 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:49 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "CHAI ZINDABAD🫡" 
+2026-08-15 14:16:50 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:50 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:50 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:50 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:50 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:51 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:51 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:51 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:51 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Python???" 
+2026-08-15 14:16:51 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 936 | Prompt: 899 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:16:51 [INFO]: [WhatsApp] 📤 AI Reply generated: "Chai zindabad! Kya aapko kisi product ki maloomat chahiye?" 
+2026-08-15 14:16:52 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:52 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "adrak wali chai>" 
+2026-08-15 14:16:52 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:53 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:53 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "No pyhton only c++" 
+2026-08-15 14:16:53 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "coffee just for vibes" 
+2026-08-15 14:16:53 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Ikr" 
+2026-08-15 14:16:53 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:53 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Okeh okehh" 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] 📥 Received message from 120363411152651407@g.us (Seller ID: 12a85fe4-90a5-4dbf-8d65-1d144796ff46): "Bro glitched" 
+2026-08-15 14:16:54 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 920 | Prompt: 895 | Cached: 0 | Cache Hit Rate: 0.0% 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:54 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:55 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1204 | Prompt: 1163 | Cached: 1024 | Cache Hit Rate: 88.0% 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:55 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1186 | Prompt: 1161 | Cached: 1024 | Cache Hit Rate: 88.2% 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:55 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 14:16:56 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:56 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1200 | Prompt: 1159 | Cached: 1024 | Cache Hit Rate: 88.4% 
+2026-08-15 14:16:56 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:56 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:56 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1202 | Prompt: 1161 | Cached: 1024 | Cache Hit Rate: 88.2% 
+2026-08-15 14:16:56 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:56 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 14:16:57 [INFO]: 
+[TOKEN_USAGE] Seller: 12a85fe4-90a5-4dbf-8d65-1d144796ff46 | Provider: OPENAI | Total: 1201 | Prompt: 1160 | Cached: 1024 | Cache Hit Rate: 88.3% 
+2026-08-15 14:16:57 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-15 14:16:57 [INFO]: [WhatsApp] ✅ Reply successfully sent to 120363411152651407@g.us 
+2026-08-15 15:44:10 [INFO]: [WhatsApp] Initializing client for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46... 
+2026-08-15 15:44:11 [INFO]: [WhatsApp] Deleted session folder for 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 15:44:11 [INFO]: [WhatsApp] Cleaned up stray headless Chrome processes. 
+2026-08-15 15:44:20 [INFO]: [WhatsApp] QR generated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 15:45:20 [INFO]: [WhatsApp] QR generated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 15:45:40 [INFO]: [WhatsApp] QR generated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 
+2026-08-15 15:46:00 [INFO]: [WhatsApp] QR generated for seller 12a85fe4-90a5-4dbf-8d65-1d144796ff46 

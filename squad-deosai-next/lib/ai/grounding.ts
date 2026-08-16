@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import type {
   AgentConfigRow,
   ApprovedFact,
@@ -164,9 +165,9 @@ export function findApprovedFacts({
   const greeting = isGreeting(message);
   const broadCatalogQuestion = BROAD_CATALOG_PATTERN.test(message);
 
-  console.log(`\n[DEBUG Grounding] Message: "${message}"`);
-  console.log(`[DEBUG Grounding] Tokens extracted:`, tokens);
-  console.log(`[DEBUG Grounding] Pre-filtered Products available: ${products.length}`);
+  logger.info(`\n[DEBUG Grounding] Message: "${message}"`);
+  logger.info(`[DEBUG Grounding] Tokens extracted:`, tokens);
+  logger.info(`[DEBUG Grounding] Pre-filtered Products available: ${products.length}`);
 
   // Always include seller identity and policies (onboarding data)
   const sellerText = [
@@ -198,7 +199,7 @@ export function findApprovedFacts({
       : scoreText(searchable, message, tokens, product.name);
       
     if (score > 0) {
-      console.log(`[DEBUG Grounding] Matched: "${product.name}" | Score: ${score}`);
+      logger.info(`[DEBUG Grounding] Matched: "${product.name}" | Score: ${score}`);
       facts.push(productFact(product, score));
     }
   });
@@ -283,7 +284,7 @@ export function getFastPathGreeting({
     ? `Salam! Welcome to ${storeName}. How can I help you today?`
     : `Hello! Welcome to ${storeName}. How can I assist you today?`;
 
-  console.log(`[FAST-PATH GREETING 0-TOKENS] Intercepted pure greeting "${trimmed}" for seller ${sellerId}`);
+  logger.info(`[FAST-PATH GREETING 0-TOKENS] Intercepted pure greeting "${trimmed}" for seller ${sellerId}`);
 
   return {
     reply: replyText,

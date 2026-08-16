@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { cn, formatPKR } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { fetchOrders, updateOrderStatus, seedDatabase } from "@/lib/supabase-service";
+import { useSupabaseRealtime } from "@/lib/supabase/realtime";
 
 type OrderStatus = "pending" | "confirmed" | "cancelled";
 
@@ -62,6 +63,12 @@ export default function OrdersPage() {
   useEffect(() => {
     loadOrders();
   }, [user]);
+
+  useSupabaseRealtime("orders", user ? `seller_id=eq.${user.id}` : null, (payload) => {
+    if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+      loadOrders();
+    }
+  });
 
   // Seeding button trigger
   const handleSeedDatabase = async () => {

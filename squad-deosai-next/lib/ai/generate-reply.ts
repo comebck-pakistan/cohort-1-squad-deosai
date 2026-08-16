@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import OpenAI from "openai";
 import { buildStaticSellerPrompt, formatDynamicContext, getFastPathGreeting } from "@/lib/ai/grounding";
 import { vertexCacheManager } from "@/lib/ai/vertex-cache";
@@ -70,11 +71,18 @@ function parseModelReply(value: string): ModelReply | null {
  * Logs token usage metrics per request tagged by seller ID.
  * Tracks cached_tokens to measure actual cache hit rate before & after optimization.
  */
+let globalTotalRequests = 0;
+let globalCacheMisses = 0;
+
 function logTokenUsage(metrics: TokenUsageLog): void {
-  console.log(
+  globalTotalRequests++;
+  if (metrics.cachedTokens === 0) globalCacheMisses++;
+  const requestMissRate = globalTotalRequests > 0 ? (globalCacheMisses / globalTotalRequests) * 100 : 0;
+  logger.info(
     `\n[TOKEN_USAGE] Seller: ${metrics.sellerId} | Provider: ${metrics.provider.toUpperCase()} | ` +
       `Total: ${metrics.totalTokens} | Prompt: ${metrics.promptTokens} | ` +
-      `Cached: ${metrics.cachedTokens} | Cache Hit Rate: ${metrics.cacheHitRate}`
+      `Cached: ${metrics.cachedTokens} | Token Cache Hit Rate: ${metrics.cacheHitRate} | ` +
+      `Request Miss Rate: ${requestMissRate.toFixed(1)}% (${globalCacheMisses}/${globalTotalRequests})`
   );
 }
 
@@ -306,7 +314,7 @@ export async function generateGroundedReply({
       resultText = res.outputText;
       tokenUsage = res.tokenUsage;
     } catch (err: any) {
-      console.warn(`[AI Provider Fallback] OpenAI call failed (${err?.message || err}). Falling back to Vertex AI (Gemini)...`);
+      logger.warn(`[AI Provider Fallback] OpenAI call failed (${err?.message || err}). Falling back to Vertex AI (Gemini)...`);
       try {
         const res = await generateViaVertex({
           sellerId: seller.id,
@@ -316,7 +324,7 @@ export async function generateGroundedReply({
         resultText = res.outputText;
         tokenUsage = res.tokenUsage;
       } catch (vertexErr: any) {
-        console.error(`[AI Provider Error] Vertex AI fallback also failed:`, vertexErr);
+        logger.error(`[AI Provider Error] Vertex AI fallback also failed:`, vertexErr);
         return handoff({ config, userMessage: message });
       }
     }
@@ -331,7 +339,7 @@ export async function generateGroundedReply({
       resultText = res.outputText;
       tokenUsage = res.tokenUsage;
     } catch (err) {
-      console.error(`[AI Provider Error] Vertex AI generation failed:`, err);
+      logger.error(`[AI Provider Error] Vertex AI generation failed:`, err);
       return handoff({ config, userMessage: message });
     }
   }

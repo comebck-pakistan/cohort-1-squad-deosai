@@ -298,7 +298,7 @@ export default function SetupPage() {
       await supabase.from("agent_configs").upsert(payload, { onConflict: "seller_id" });
       setConfigSaveSuccess(true);
       setTimeout(() => setConfigSaveSuccess(false), 3000);
-      console.log("[Setup Sync] Saved agent_configs to Supabase for seller:", user.id);
+      
     } catch (err) {
       console.error("[Setup Sync Error] Failed to save agent_configs:", err);
     } finally {
@@ -486,7 +486,7 @@ export default function SetupPage() {
 
       if (productPayloads.length > 0) {
         await supabase.from("products").upsert(productPayloads);
-        console.log(`[Products Sync] Upserted ${productPayloads.length} products to Supabase.`);
+        
       }
     } catch (err) {
       console.error("[Products Sync Error] Failed to insert CSV products:", err);
