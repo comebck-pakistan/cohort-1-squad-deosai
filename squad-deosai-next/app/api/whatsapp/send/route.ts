@@ -1,17 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getWhatsAppStatus } from '@/lib/whatsapp/client';
 import { insertMessage, updateConversationStatus } from '@/lib/supabase-service';
+import { logger } from '@/lib/logger';
+import { whatsappSendSchema } from '@/lib/validations/api';
 
 export async function POST(req: Request) {
   try {
-    const { sellerId, conversationId, customerPhone, message } = await req.json();
+    let rawBody;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 });
+    }
 
-    if (!sellerId || !conversationId || !customerPhone || !message) {
+    const parseResult = whatsappSendSchema.safeParse(rawBody);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: parseResult.error.issues[0].message, details: parseResult.error.issues },
         { status: 400 }
       );
     }
+
+    const { sellerId, conversationId, customerPhone, message } = parseResult.data;
 
     // 1. Get active WhatsApp client from memory
     const { client, status } = getWhatsAppStatus(sellerId);
@@ -41,7 +51,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('[API WhatsApp Send] Error:', error);
+    logger.error('[API WhatsApp Send] Error:', { error });
     return NextResponse.json(
       { error: error.message || 'Failed to send message' },
       { status: 500 }

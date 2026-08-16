@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { Message } from 'whatsapp-web.js';
 import { createClient } from '@supabase/supabase-js';
 import { generateGroundedReply } from '@/lib/ai/generate-reply';
@@ -25,7 +26,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
     if (msg.fromMe) return;
 
     const messageText = msg.body;
-    console.log(`[WhatsApp] 📥 Received message from ${msg.from} (Seller ID: ${sellerId}): "${messageText}"`);
+    logger.info(`[WhatsApp] 📥 Received message from ${msg.from} (Seller ID: ${sellerId}): "${messageText}"`);
 
     if (!messageText || !messageText.trim()) return;
 
@@ -59,7 +60,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
     ]);
 
     if (sellerResult.error) {
-      console.error(`[WhatsApp] ❌ Failed to fetch seller ${sellerId}:`, sellerResult.error);
+      logger.error(`[WhatsApp] ❌ Failed to fetch seller ${sellerId}:`, sellerResult.error);
       return;
     }
 
@@ -180,13 +181,13 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
         });
       
       if (msgInsertError) {
-        console.error(`[WhatsApp] ❌ Error saving customer message to DB:`, msgInsertError);
+        logger.error(`[WhatsApp] ❌ Error saving customer message to DB:`, msgInsertError);
       }
     } else {
-      console.error(`[WhatsApp] ❌ No conversation found or created, skipping message insert.`);
+      logger.error(`[WhatsApp] ❌ No conversation found or created, skipping message insert.`);
     }
 
-    console.log(`[WhatsApp] 🤖 Generating AI reply for seller ${sellerId}...`);
+    logger.info(`[WhatsApp] 🤖 Generating AI reply for seller ${sellerId}...`);
     
     // Call the same function used by the Playground
     const aiResponse = await generateGroundedReply({
@@ -198,9 +199,9 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
     });
 
     if (aiResponse.reply) {
-      console.log(`[WhatsApp] 📤 AI Reply generated: "${aiResponse.reply}"`);
+      logger.info(`[WhatsApp] 📤 AI Reply generated: "${aiResponse.reply}"`);
       await msg.reply(aiResponse.reply);
-      console.log(`[WhatsApp] ✅ Reply successfully sent to ${msg.from}`);
+      logger.info(`[WhatsApp] ✅ Reply successfully sent to ${msg.from}`);
 
       // ==========================================
       // DB LOGIC: Save AI reply to Inbox
@@ -217,7 +218,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
           });
           
         if (botMsgError) {
-          console.error(`[WhatsApp] ❌ Error saving bot message to DB:`, botMsgError);
+          logger.error(`[WhatsApp] ❌ Error saving bot message to DB:`, botMsgError);
         }
 
         const { error: convUpdateError } = await supabase
@@ -229,14 +230,14 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
           .eq('id', conversation.id);
           
         if (convUpdateError) {
-          console.error(`[WhatsApp] ❌ Error updating conversation status:`, convUpdateError);
+          logger.error(`[WhatsApp] ❌ Error updating conversation status:`, convUpdateError);
         }
       }
     } else {
-      console.log(`[WhatsApp] ⚠️ AI chose not to reply or handoff was triggered without a message.`);
+      logger.info(`[WhatsApp] ⚠️ AI chose not to reply or handoff was triggered without a message.`);
     }
 
   } catch (error) {
-    console.error(`[WhatsApp] ❌ Error handling message for seller ${sellerId}:`, error);
+    logger.error(`[WhatsApp] ❌ Error handling message for seller ${sellerId}:`, error);
   }
 }
