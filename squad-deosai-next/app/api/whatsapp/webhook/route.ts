@@ -10,6 +10,7 @@ import type {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getWhatsAppProvider } from "@/lib/whatsapp";
 import type { IncomingWhatsAppMessage } from "@/lib/whatsapp/types";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 
@@ -101,7 +102,8 @@ export async function POST(request: Request) {
   let payload: MetaWebhookPayload;
   try {
     payload = JSON.parse(rawBody) as MetaWebhookPayload;
-  } catch {
+  } catch (error: any) {
+    logger.error("[WhatsApp Webhook Error] Invalid webhook JSON.", { error });
     return NextResponse.json({ error: "Invalid webhook JSON." }, { status: 400 });
   }
 
@@ -240,7 +242,8 @@ export async function POST(request: Request) {
       .eq("external_event_id", incoming.messageId);
 
     return NextResponse.json({ received: true, action: result.action });
-  } catch {
+  } catch (error: any) {
+    logger.error("[WhatsApp Webhook Processing Error]", { error });
     // A non-2xx response asks Meta to retry transient failures.
     return NextResponse.json(
       { error: "Webhook processing is not configured or temporarily failed." },

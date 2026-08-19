@@ -97,6 +97,8 @@ export default function SetupPage() {
   const [whatsappRequested, setWhatsappRequested] = useState(false);
   const [whatsappConnected, setWhatsappConnected] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [waStatus, setWaStatus] = useState<'disconnected' | 'initializing' | 'qr_ready' | 'connected'>('disconnected');
+  const [waQrDataUrl, setWaQrDataUrl] = useState<string | null>(null);
 
   const visibleKnowledgeList = knowledgeList.filter(
     (k) => k.id !== "k_onboarding_profile" && k.id !== "k_products_table"
@@ -259,6 +261,31 @@ export default function SetupPage() {
     loadData();
   }, [user, demoMode]);
 
+  // WhatsApp Polling
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (activeTab === "whatsapp" && waStatus !== "connected" && waStatus !== "disconnected") {
+      const fetchStatus = async () => {
+        try {
+          const res = await fetch("/api/whatsapp/status");
+          if (res.ok) {
+            const data = await res.json();
+            setWaStatus(data.status);
+            if (data.qrDataUrl) {
+              setWaQrDataUrl(data.qrDataUrl);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch WhatsApp status", error);
+        }
+      };
+      
+      fetchStatus();
+      interval = setInterval(fetchStatus, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTab, waStatus]);
+
   const [savingConfig, setSavingConfig] = useState(false);
   const [configSaveSuccess, setConfigSaveSuccess] = useState(false);
 
@@ -293,7 +320,7 @@ export default function SetupPage() {
       await supabase.from("agent_configs").upsert(payload, { onConflict: "seller_id" });
       setConfigSaveSuccess(true);
       setTimeout(() => setConfigSaveSuccess(false), 3000);
-      console.log("[Setup Sync] Saved agent_configs to Supabase for seller:", user.id);
+      
     } catch (err) {
       console.error("[Setup Sync Error] Failed to save agent_configs:", err);
     } finally {
@@ -481,7 +508,7 @@ export default function SetupPage() {
 
       if (productPayloads.length > 0) {
         await supabase.from("products").upsert(productPayloads);
-        console.log(`[Products Sync] Upserted ${productPayloads.length} products to Supabase.`);
+        
       }
     } catch (err) {
       console.error("[Products Sync Error] Failed to insert CSV products:", err);
@@ -717,12 +744,11 @@ export default function SetupPage() {
       return;
     }
     try {
-      const supabase = createClient();
-      await supabase
-        .from("sellers")
-        .update({ whatsapp_requested: true, phone: whatsappNumber })
-        .eq("id", user?.id || "");
-    } catch {}
+      await fetch('/api/whatsapp/connect', { method: 'POST' });
+    } catch (error) {
+      console.error('Failed to connect WhatsApp', error);
+      setWaStatus('disconnected');
+    }
   };
 
   const handleDisconnectWhatsApp = async () => {

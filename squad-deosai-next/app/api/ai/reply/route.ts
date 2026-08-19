@@ -7,6 +7,9 @@ import type {
   SellerRow,
 } from "@/lib/ai/types";
 import { createClient } from "@/lib/supabase/server";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import { aiReplySchema } from "@/lib/validations/api";
 
 export const runtime = "nodejs";
 
@@ -23,19 +26,23 @@ const DEFAULT_CONFIG: Omit<AgentConfigRow, "seller_id"> = {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { 
-      message?: unknown;
-      configOverride?: Partial<AgentConfigRow>;
-      onboardingOverride?: any;
-    };
-    const message = typeof body.message === "string" ? body.message.trim() : "";
+    let rawBody;
+    try {
+      rawBody = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON format" }, { status: 400 });
+    }
 
-    if (!message || message.length > 1200) {
+    const parseResult = aiReplySchema.safeParse(rawBody);
+    if (!parseResult.success) {
       return NextResponse.json(
-        { error: "Enter a message between 1 and 1,200 characters." },
-        { status: 400 },
+        { error: parseResult.error.issues[0].message, details: parseResult.error.issues },
+        { status: 400 }
       );
     }
+
+    const body = parseResult.data;
+    const message = body.message.trim();
 
     const supabase = await createClient();
     const {
@@ -44,6 +51,14 @@ export async function POST(request: Request) {
 
     if (!user) {
       return NextResponse.json({ error: "Sign in to test the assistant." }, { status: 401 });
+    }
+
+    const { success } = await checkRateLimit(user.id, 5, 60 * 1000);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute before sending another message." },
+        { status: 429 }
+      );
     }
 
     // 1. Prepare ilike conditions to search products in Supabase directly
@@ -79,7 +94,7 @@ export async function POST(request: Request) {
     ]);
 
     if (sellerResult.error) {
-      console.error("[Reply API Error] Failed to fetch seller row:", sellerResult.error);
+      logger.error("[Reply API Error] Failed to fetch seller row:", { error: sellerResult.error });
       return NextResponse.json(
         { error: "Supabase tables are not ready. Run the supplied migration first." },
         { status: 503 },
@@ -139,13 +154,13 @@ export async function POST(request: Request) {
         products = (fallbackProducts.data || []) as ProductRow[];
     }
 
-    console.log(`\n=== AI DEBUG LOG ===`);
-    console.log(`[DEBUG] Supabase ilike tokens:`, searchTokens);
-    console.log(`[DEBUG] Products fetched from Supabase: ${products.length}`);
+    logger.info(`\n=== AI DEBUG LOG ===`);
+    logger.info(`[DEBUG] Supabase ilike tokens:`, searchTokens);
+    logger.info(`[DEBUG] Products fetched from Supabase: ${products.length}`);
     if (products.length === 0) {
-      console.log(`[DEBUG] ❌ NO PRODUCTS FOUND for this seller_id!`);
+      logger.info(`[DEBUG] ❌ NO PRODUCTS FOUND for this seller_id!`);
     } else {
-      console.log(`[DEBUG] ✅ First product fetched: ${products[0].name}`);
+      logger.info(`[DEBUG] ✅ First product fetched: ${products[0].name}`);
     }
 
     const { data: conversation } = await supabase
@@ -197,6 +212,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
+    logger.error("[Reply API Error] AI reply generation failed", { error });
     const message = error instanceof Error ? error.message : "AI reply generation failed.";
     const configurationError =
       message.includes("OPENAI_API_KEY") || message.includes("provider");
