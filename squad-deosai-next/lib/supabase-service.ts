@@ -362,3 +362,53 @@ export async function seedDatabase(sellerId: string): Promise<void> {
     throw orderError;
   }
 }
+
+export interface DBSeller {
+  id: string;
+  email: string;
+  business_name: string;
+  owner_name: string;
+  phone: string;
+  plan: string;
+  role: "seller" | "admin";
+  industry: string;
+  website: string;
+  onboarded: boolean;
+  whatsapp_requested: boolean;
+  whatsapp_connected: boolean;
+  created_at: string;
+}
+
+/** Fetch all sellers for admin dashboard */
+export async function fetchSellers(): Promise<DBSeller[]> {
+  const { data, error } = await supabase
+    .from("sellers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching sellers:", error);
+    throw error;
+  }
+  return data || [];
+}
+
+/** Update WhatsApp request and connection status for a seller */
+export async function updateWhatsAppStatus(
+  sellerId: string,
+  requested: boolean,
+  connected: boolean
+): Promise<void> {
+  const { error } = await supabase
+    .from("sellers")
+    .update({
+      whatsapp_requested: requested,
+      whatsapp_connected: connected
+    })
+    .eq("id", sellerId);
+
+  if (error) {
+    console.error("Error updating WhatsApp status:", error);
+    throw error;
+  }
+}
