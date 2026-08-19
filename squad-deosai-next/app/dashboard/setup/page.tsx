@@ -11,6 +11,7 @@ import { Input, Label, Textarea, Select } from "@/components/ui/Field";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
+import { useDemoMode } from "@/lib/demo-mode";
 
 type SubTab = "onboarding" | "tasks" | "knowledge" | "tone" | "tools" | "whatsapp";
 
@@ -33,6 +34,7 @@ const tryParseSpreadsheet = (content: string) => {
 
 export default function SetupPage() {
   const { user, loading: authLoading } = useAuth();
+  const { demoMode } = useDemoMode();
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<SubTab>("onboarding");
   const [initialized, setInitialized] = useState(false);
@@ -93,6 +95,7 @@ export default function SetupPage() {
 
   // Setup — WhatsApp Coexistence Status
   const [whatsappRequested, setWhatsappRequested] = useState(false);
+  const [whatsappConnected, setWhatsappConnected] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [waStatus, setWaStatus] = useState<'disconnected' | 'initializing' | 'qr_ready' | 'connected'>('disconnected');
   const [waQrDataUrl, setWaQrDataUrl] = useState<string | null>(null);
@@ -117,8 +120,6 @@ export default function SetupPage() {
 
   useEffect(() => {
     if (user && !initialized) {
-      setWhatsappNumber(user.phone || "");
-      setWhatsappRequested(user.onboarded);
       setInitialized(true);
     }
   }, [user, initialized]);
@@ -183,10 +184,31 @@ export default function SetupPage() {
           } catch {}
         }
 
-        if (sellerRes.data) {
+        if (demoMode) {
+          const storedConnected = window.localStorage.getItem(`demo_whatsapp_connected_${user.id}`);
+          const storedRequested = window.localStorage.getItem(`demo_whatsapp_requested_${user.id}`);
+          const storedNumber = window.localStorage.getItem(`demo_whatsapp_number_${user.id}`);
+
+          setWhatsappConnected(storedConnected === null ? true : storedConnected === "true");
+          setWhatsappRequested(storedRequested === null ? false : storedRequested === "true");
+          setWhatsappNumber(storedNumber || "+92 300 1234567");
+
+          setOnboardingData({
+            businessName: parsedOb.businessName || "Meher Handmade",
+            category: parsedOb.category || "Jewellery",
+            whatsappNumber: storedNumber || "+92 300 1234567",
+            deliveryCharges: parsedOb.deliveryCharges || "200",
+            deliveryTime: parsedOb.deliveryTime || "2-4 working days",
+            returnPolicy: parsedOb.returnPolicy || "7-day exchange on unworn pieces",
+            agentName: parsedOb.agentName || "Jawab Bot",
+            aiTone: parsedOb.aiTone || "friendly",
+            aiLanguage: parsedOb.aiLanguage || "urdu-english",
+          });
+        } else if (sellerRes.data) {
           const s = sellerRes.data;
           if (s.phone) setWhatsappNumber(s.phone);
           if (s.whatsapp_requested !== undefined) setWhatsappRequested(s.whatsapp_requested);
+          setWhatsappConnected(!!s.whatsapp_connected);
 
           setOnboardingData({
             businessName: s.business_name || parsedOb.businessName || "",
@@ -237,7 +259,7 @@ export default function SetupPage() {
 
 
     loadData();
-  }, [user]);
+  }, [user, demoMode]);
 
   // WhatsApp Polling
   useEffect(() => {
@@ -714,23 +736,36 @@ export default function SetupPage() {
 
 
   const handleRequestWhatsApp = async () => {
-    if (whatsappNumber.trim()) {
-      try {
-        const supabase = createClient();
-        await supabase
-          .from("sellers")
-          .update({ phone: whatsappNumber })
-          .eq("id", user?.id || "");
-      } catch {}
+    if (!whatsappNumber.trim()) return;
+    setWhatsappRequested(true);
+    if (demoMode) {
+      window.localStorage.setItem(`demo_whatsapp_requested_${user?.id}`, "true");
+      window.localStorage.setItem(`demo_whatsapp_number_${user?.id}`, whatsappNumber);
+      return;
     }
-    
-    setWaStatus('initializing');
     try {
       await fetch('/api/whatsapp/connect', { method: 'POST' });
     } catch (error) {
       console.error('Failed to connect WhatsApp', error);
       setWaStatus('disconnected');
     }
+  };
+
+  const handleDisconnectWhatsApp = async () => {
+    setWhatsappRequested(false);
+    setWhatsappConnected(false);
+    if (demoMode) {
+      window.localStorage.setItem(`demo_whatsapp_requested_${user?.id}`, "false");
+      window.localStorage.setItem(`demo_whatsapp_connected_${user?.id}`, "false");
+      return;
+    }
+    try {
+      const supabase = createClient();
+      await supabase
+        .from("sellers")
+        .update({ whatsapp_requested: false, whatsapp_connected: false })
+        .eq("id", user?.id || "");
+    } catch {}
   };
 
   const handleSendMessage = async () => {
@@ -1600,19 +1635,46 @@ export default function SetupPage() {
                       <span className="text-2xl">💬</span>
                       <div>
                         <p className="text-sm font-semibold text-ink">
-                          {waStatus === 'connected' ? "Connected" : waStatus === 'qr_ready' ? "Scan QR Code" : waStatus === 'initializing' ? "Initializing..." : "Not connected"}
+                          {whatsappConnected ? "Connected" : whatsappRequested ? "Connection Pending" : "Not connected"}
                         </p>
                         <p className="font-mono text-xs text-ink-soft">{whatsappNumber || "No number connected"}</p>
                       </div>
                     </div>
-                    {waStatus === 'connected' ? (
-                      <Badge tone="live">Connected</Badge>
-                    ) : waStatus !== 'disconnected' ? (
-                      <Badge tone="marigold">{waStatus}</Badge>
-                    ) : null}
+                    {whatsappConnected ? (
+                      <Badge tone="teal" className="flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-live opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-live"></span>
+                        </span>
+                        Active Connection
+                      </Badge>
+                    ) : whatsappRequested ? (
+                      <Badge tone="marigold">Setup requested</Badge>
+                    ) : (
+                      <Badge tone="neutral">Not connected</Badge>
+                    )}
                   </div>
 
-                  {waStatus === 'disconnected' ? (
+                  {whatsappConnected ? (
+                    <div className="space-y-4">
+                      <div className="rounded-xl bg-teal-soft/20 border border-teal-soft p-4 text-xs text-ink-soft">
+                        <p className="font-semibold text-teal mb-1">🎉 AI Assistant is Live!</p>
+                        Your WhatsApp number is successfully connected via Meta Cloud APIs. Deosai AI is currently answering customer queries from your catalog and handling auto-replies concurrently with your manual apps.
+                      </div>
+                      <Button variant="outline" className="border-danger/30 text-danger hover:bg-danger/5 animate-fade-in" onClick={handleDisconnectWhatsApp}>
+                        Disconnect WhatsApp
+                      </Button>
+                    </div>
+                  ) : whatsappRequested ? (
+                    <div className="space-y-4">
+                      <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft">
+                        Connection has been requested. The Deosai team will configure Meta Cloud API coexistence for your business shortly.
+                      </div>
+                      <Button variant="outline" className="border-danger/30 text-danger hover:bg-danger/5" onClick={handleDisconnectWhatsApp}>
+                        Cancel Request
+                      </Button>
+                    </div>
+                  ) : (
                     <div className="space-y-3">
                       <Label htmlFor="wa-num">Submit WhatsApp Business Number</Label>
                       <div className="flex gap-2">
@@ -1625,21 +1687,6 @@ export default function SetupPage() {
                         />
                         <Button onClick={handleRequestWhatsApp}>Connect</Button>
                       </div>
-                    </div>
-                  ) : waStatus === 'qr_ready' && waQrDataUrl ? (
-                    <div className="flex flex-col items-center space-y-4 py-4">
-                      <p className="text-sm text-ink-soft">Scan this QR code with your WhatsApp app to connect.</p>
-                      <div className="bg-white p-2 rounded-xl shadow-sm border border-line">
-                        <img src={waQrDataUrl} alt="WhatsApp QR Code" className="w-48 h-48" />
-                      </div>
-                    </div>
-                  ) : waStatus === 'initializing' ? (
-                    <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft flex items-center justify-center h-48">
-                      Starting WhatsApp client... Please wait.
-                    </div>
-                  ) : (
-                    <div className="rounded-xl bg-paper p-4 text-xs text-ink-soft">
-                      Your WhatsApp number is connected and running concurrently.
                     </div>
                   )}
                 </CardBody>
