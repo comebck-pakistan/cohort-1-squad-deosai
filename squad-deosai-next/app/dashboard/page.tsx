@@ -82,15 +82,15 @@ export default function DashboardOverview() {
 
       for (const c of needsYouConvs) {
         const msgs = await fetchMessages(user.id, c.id);
-        const lastCustomerMsg = [...msgs].reverse().find((m) => m.author === "customer");
-        const lastBotMsg = [...msgs].reverse().find((m) => m.author === "bot");
+        const lastCustomerMsg = [...msgs].reverse().find((m) => m.sender_type === "customer");
+        const lastBotMsg = [...msgs].reverse().find((m) => m.sender_type === "bot");
 
         handoffItems.push({
           id: c.id,
           customerName: c.customer_name || "Unknown",
           customerPhone: c.customer_phone || "",
-          question: lastCustomerMsg?.body || "Inquiry received.",
-          draftReply: lastBotMsg?.body || "Assalam o alaikum! We will process your request shortly.",
+          question: lastCustomerMsg?.content || "Inquiry received.",
+          draftReply: lastBotMsg?.content || "Assalam o alaikum! We will process your request shortly.",
           time: new Date(c.last_message_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         });
       }
@@ -115,7 +115,7 @@ export default function DashboardOverview() {
     if (!demoMode && user) {
       try {
         // 1. Insert bot message into Supabase
-        await insertMessage(user.id, id, item.draftReply, "bot", "outbound");
+        await insertMessage(user.id, id, item.draftReply, "bot", true);
         // 2. Mark conversation as replied (auto-replied)
         await updateConversationStatus(user.id, id, "auto-replied");
       } catch (err) {

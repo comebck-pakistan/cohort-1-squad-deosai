@@ -149,6 +149,14 @@ export function useAuth(): AuthState {
   }, []);
 
   const signOut = async () => {
+    // 1. Clean up WhatsApp session first
+    try {
+      await fetch('/api/whatsapp/logout', { method: 'POST' });
+    } catch (e) {
+      console.error('Failed to logout WhatsApp session', e);
+    }
+
+    // 2. Sign out of Supabase
     const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);

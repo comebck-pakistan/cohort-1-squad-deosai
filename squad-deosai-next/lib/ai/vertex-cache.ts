@@ -14,6 +14,7 @@ export type CachedContentRef = {
  */
 class VertexCacheManager {
   private cacheStore = new Map<string, CachedContentRef>();
+  private stats = { hits: 0, misses: 0, total: 0 };
 
   private computeHash(text: string): string {
     return crypto.createHash("sha256").update(text).digest("hex");

@@ -46,13 +46,16 @@ export default function SignupPage() {
                 console.error('Error status:', error.status)
                 console.error('Error name:', error.name)
                 setError(`Signup failed [${error.status}]: ${error.message}`)
+            } else if (data.user?.identities && data.user.identities.length === 0) {
+                console.error('Email already in use (identities is empty)')
+                setError('Email already in use.')
             } else {
                 console.log('Signup success! User data:', data.user)
                 console.log('Session data:', data.session)
 
                 if (data.session) {
-                    console.log('Redirecting to dashboard...')
-                    router.push('/dashboard')
+                    console.log('Redirecting to onboarding...')
+                    router.push('/onboarding')
                 } else {
                     console.log('No session returned. Email confirmation required.')
                     setError('Signup successful! Please check your email to confirm your account.')

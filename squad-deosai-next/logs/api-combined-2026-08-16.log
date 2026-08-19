@@ -1,0 +1,49 @@
+2026-08-16 14:43:07 [INFO]: [WhatsApp] Initializing client for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9... 
+2026-08-16 14:43:08 [INFO]: [WhatsApp] Cleaned up stray headless Chrome processes. 
+2026-08-16 14:43:12 [INFO]: [WhatsApp] QR generated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:33 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:43:43 [INFO]: [WhatsApp] 📥 Received message from 213829711577102@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 10828401103052@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 121921286988008@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 176841168044186@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 153407675486410@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 260387391991905@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 77159876042986@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 243404957065378@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 253794046714088@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:43:54 [INFO]: [WhatsApp] 📥 Received message from 16303897239641@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "" 
+2026-08-16 14:44:11 [INFO]: [WhatsApp] 📥 Received message from 67182415368417@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "Do u have pearl necklace?" 
+2026-08-16 14:44:12 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9... 
+2026-08-16 14:44:15 [INFO]: 
+[TOKEN_USAGE] Seller: 0fb42b1f-b073-419a-bab3-920efbc0e0b9 | Provider: OPENAI | Total: 1186 | Prompt: 1128 | Cached: 0 | Token Cache Hit Rate: 0.0% | Request Miss Rate: 100.0% (1/1) 
+2026-08-16 14:44:15 [INFO]: [WhatsApp] 📤 AI Reply generated: "Yes, we have a Pearl Necklace for PKR 3900. It's in stock!" 
+2026-08-16 14:44:16 [INFO]: [WhatsApp] ✅ Reply successfully sent to 67182415368417@lid 
+2026-08-16 14:44:28 [INFO]: [WhatsApp] 📥 Received message from 67182415368417@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "So what are your Delivery charges?" 
+2026-08-16 14:44:29 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9... 
+2026-08-16 14:44:31 [INFO]: 
+[TOKEN_USAGE] Seller: 0fb42b1f-b073-419a-bab3-920efbc0e0b9 | Provider: OPENAI | Total: 1607 | Prompt: 1577 | Cached: 0 | Token Cache Hit Rate: 0.0% | Request Miss Rate: 100.0% (2/2) 
+2026-08-16 14:44:31 [INFO]: [WhatsApp] 📤 AI Reply generated: "Delivery charges are PKR 150." 
+2026-08-16 14:44:31 [INFO]: [WhatsApp] ✅ Reply successfully sent to 67182415368417@lid 
+2026-08-16 14:44:40 [INFO]: [WhatsApp] 📥 Received message from 67182415368417@lid (Seller ID: 0fb42b1f-b073-419a-bab3-920efbc0e0b9): "Thanks" 
+2026-08-16 14:44:41 [INFO]: [WhatsApp] 🤖 Generating AI reply for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9... 
+2026-08-16 14:44:42 [INFO]: 
+[TOKEN_USAGE] Seller: 0fb42b1f-b073-419a-bab3-920efbc0e0b9 | Provider: OPENAI | Total: 1612 | Prompt: 1571 | Cached: 1536 | Token Cache Hit Rate: 97.8% | Request Miss Rate: 66.7% (2/3) 
+2026-08-16 14:44:42 [INFO]: [WhatsApp] 📤 AI Reply generated: "I do not have enough verified information to answer that accurately. I will ask the seller to reply personally." 
+2026-08-16 14:44:45 [INFO]: [WhatsApp] ✅ Reply successfully sent to 67182415368417@lid 
+2026-08-16 14:45:08 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:08 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Authenticated for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:09 [INFO]: [WhatsApp] Client ready for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9 
+2026-08-16 14:45:13 [INFO]: [WhatsApp] Client disconnected for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9: 
+2026-08-16 14:45:14 [INFO]: [WhatsApp] Client disconnected for seller 0fb42b1f-b073-419a-bab3-920efbc0e0b9: 
