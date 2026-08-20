@@ -64,25 +64,11 @@ export default function SettingsPage() {
     }
   };
 
-  const handleGrantAdmin = async () => {
+  const handleGrantAdmin = () => {
     if (!user) return;
     try {
       localStorage.setItem(`role_${user.id}`, "admin");
-      
-      try {
-        const supabase = createClient();
-        await supabase
-          .from("sellers")
-          .update({ role: "admin" })
-          .eq("id", user.id);
-      } catch (dbErr) {
-        console.error("Failed to update role in Supabase:", dbErr);
-      }
-
-      setDevMessage("✅ Admin privileges granted! Reloading page...");
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setDevMessage("✅ Admin privileges granted locally! You can now visit /admin.");
     } catch (err) {
       console.error(err);
       setDevMessage("❌ Failed to grant admin privileges.");
