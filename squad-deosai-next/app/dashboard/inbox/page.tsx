@@ -160,9 +160,28 @@ export default function InboxPage() {
     if (!draft.trim() || !activeChat || !user) return;
 
     const messageToSend = draft.trim();
-    // Optimistic UI updates could go here
     setDraft("");
     setAgentDraft("");
+
+    // Optimistically append message to local state
+    const optimisticMsg: Message = {
+      id: `temp_${Date.now()}`,
+      sender: "seller",
+      content: messageToSend,
+      createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+
+    setConversations((prev) =>
+      prev.map((c) =>
+        c.id === activeChat.id
+          ? {
+              ...c,
+              lastMessageAt: optimisticMsg.createdAt,
+              messages: [...c.messages, optimisticMsg],
+            }
+          : c
+      )
+    );
 
     try {
       const res = await fetch("/api/whatsapp/send", {
@@ -177,16 +196,15 @@ export default function InboxPage() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to send message via API");
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to send message via API");
       }
 
-      // Reload conversations to get the new message
       await loadConversations();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to send outbound message:", err);
-      // Revert draft on error if needed
-      setDraft(messageToSend);
-      alert("Failed to send message. Please try again.");
+      alert(`Failed to send message: ${err.message || "Please try again."}`);
+      await loadConversations();
     }
   };
 

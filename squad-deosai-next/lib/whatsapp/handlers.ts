@@ -6,7 +6,7 @@ import type { AgentConfigRow, ProductRow, SellerRow } from '@/lib/ai/types';
 
 // Initialize Supabase client using env variables to bypass Next.js request context restrictions
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 const DEFAULT_CONFIG: Omit<AgentConfigRow, "seller_id"> = {
@@ -50,7 +50,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
         .from("sellers")
         .select("id,business_name,industry,website")
         .eq("id", sellerId)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("agent_configs")
         .select("*")
@@ -59,12 +59,29 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
       productQuery.limit(20),
     ]);
 
-    if (sellerResult.error) {
-      logger.error(`[WhatsApp] ❌ Failed to fetch seller ${sellerId}:`, sellerResult.error);
-      return;
-    }
+    let sellerData = sellerResult.data;
 
-    const sellerData = sellerResult.data;
+    // If seller record is missing in public.sellers (e.g. auth trigger skipped),
+    // auto-create the seller row so foreign key constraints pass and inbox/AI reply work seamlessly.
+    if (!sellerData) {
+      logger.warn(`[WhatsApp] ⚠️ Seller ${sellerId} not found in sellers table. Auto-creating seller record...`);
+      const { data: upsertedSeller, error: upsertError } = await supabase
+        .from("sellers")
+        .upsert({ id: sellerId }, { onConflict: "id" })
+        .select("id,business_name,industry,website")
+        .maybeSingle();
+
+      if (upsertError) {
+        logger.error(`[WhatsApp] ❌ Failed to auto-create seller ${sellerId}:`, upsertError);
+      }
+
+      sellerData = upsertedSeller || {
+        id: sellerId,
+        business_name: "Store",
+        industry: null,
+        website: null,
+      };
+    }
     const remoteConfig = configResult.data as AgentConfigRow | null;
 
     const obItem = Array.isArray(remoteConfig?.knowledge_items)
@@ -115,10 +132,53 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
     // ==========================================
     // DB LOGIC: Save incoming message to Inbox
     // ==========================================
-    const rawId = msg.from.split('@')[0];
-    let cleanPhone = rawId.replace(/[^0-9]/g, '');
+    let extractedPhone = '';
+    let customerNameStr = '';
 
-    // Issue 4: Extract correct number, handle PK numbers
+    try {
+      const contact = await msg.getContact();
+      if (contact) {
+        if (contact.pushname || contact.name || (contact as any).shortName) {
+          customerNameStr = contact.pushname || contact.name || (contact as any).shortName || '';
+        }
+
+        // Try whatsapp-web.js async getFormattedNumber() method
+        try {
+          const formatted = await contact.getFormattedNumber();
+          if (formatted) {
+            const digits = formatted.replace(/[^0-9]/g, '');
+            if (digits.length >= 7 && digits.length <= 13 && !digits.startsWith('205')) {
+              extractedPhone = digits;
+            }
+          }
+        } catch (fmtErr) {
+          logger.warn(`[WhatsApp Contact] getFormattedNumber error:`, fmtErr);
+        }
+
+        if (!extractedPhone && contact.number && !contact.number.startsWith('205') && contact.number.length <= 13) {
+          extractedPhone = contact.number;
+        } else if (!extractedPhone && (contact as any).id?.user && !(contact as any).id?.user.startsWith('205') && (contact as any).id?.user.length <= 13) {
+          extractedPhone = (contact as any).id.user;
+        }
+      }
+    } catch (e) {
+      logger.warn(`[WhatsApp] Failed to fetch contact info for ${msg.from}:`, e);
+    }
+
+    if (!extractedPhone) {
+      const fromUser = msg.from.split('@')[0];
+      const authorUser = msg.author ? msg.author.split('@')[0] : '';
+      const dataFromUser = (msg as any)._data?.from?.split('@')[0] || '';
+      const dataAuthorUser = (msg as any)._data?.author?.split('@')[0] || '';
+
+      const candidates = [dataAuthorUser, authorUser, dataFromUser, fromUser];
+      const validPhone = candidates.find(c => c && !c.startsWith('205') && c.length <= 13);
+      extractedPhone = validPhone || fromUser;
+    }
+
+    let cleanPhone = extractedPhone.replace(/[^0-9]/g, '');
+
+    // Format Pakistani phone numbers
     if (cleanPhone.startsWith('03') && cleanPhone.length === 11) {
       cleanPhone = '92' + cleanPhone.substring(1);
     } else if (cleanPhone.startsWith('3') && cleanPhone.length === 10) {
@@ -126,13 +186,9 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
     }
 
     const customerPhoneStr = '+' + cleanPhone;
-    let customerNameStr = customerPhoneStr;
-    try {
-      const contact = await msg.getContact();
-      if (contact?.pushname) {
-        customerNameStr = contact.pushname;
-      }
-    } catch (e) {}
+    if (!customerNameStr || customerNameStr === '.' || customerNameStr.toLowerCase() === 'unknown') {
+      customerNameStr = customerPhoneStr;
+    }
 
     let { data: conversation } = await supabase
       .from('conversations')
@@ -142,7 +198,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
       .maybeSingle();
 
     if (!conversation) {
-      const { data: newConv } = await supabase
+      const { data: newConv, error: createConvErr } = await supabase
         .from('conversations')
         .insert({
           seller_id: sellerId,
@@ -156,6 +212,9 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
         })
         .select('id, unread_count')
         .single();
+      if (createConvErr) {
+        logger.error(`[WhatsApp] ❌ Error creating conversation in DB:`, createConvErr);
+      }
       conversation = newConv;
     } else {
       await supabase
@@ -164,6 +223,7 @@ export async function handleIncomingMessage(msg: Message, sellerId: string) {
           status: 'needs-you',
           last_message_at: new Date().toISOString(),
           customer_name: customerNameStr,
+          customer_phone: customerPhoneStr,
           unread_count: (conversation.unread_count || 0) + 1,
         })
         .eq('id', conversation.id);
