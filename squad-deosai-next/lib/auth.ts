@@ -68,8 +68,8 @@ function toAuthUser(
     plan: (seller?.plan as string) ?? "Early Access",
     memberSince,
     role:
-      (typeof window !== "undefined" ? (window.localStorage.getItem(`role_${authUser.id}`) as "seller" | "admin") : null) ??
       (seller?.role as "seller" | "admin") ??
+      (typeof window !== "undefined" ? (window.localStorage.getItem(`role_${authUser.id}`) as "seller" | "admin") : null) ??
       "seller",
     industry:
       (seller?.industry as string) ??
