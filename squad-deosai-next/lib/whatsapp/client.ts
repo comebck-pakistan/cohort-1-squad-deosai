@@ -61,7 +61,7 @@ export async function initializeWhatsAppClient(sellerId: string): Promise<WhatsA
   const client = new Client({
     authStrategy: new LocalAuth({ clientId: sellerId }),
     puppeteer: {
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' : undefined),
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
     },
   });
