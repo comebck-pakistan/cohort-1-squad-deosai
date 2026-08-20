@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         .from("sellers")
         .select("id,business_name,industry,website")
         .eq("id", user.id)
-        .single(),
+        .maybeSingle(),
       supabase
         .from("agent_configs")
         .select("*")
@@ -93,15 +93,22 @@ export async function POST(request: Request) {
       productQuery.limit(20), // Fetch top matches directly from DB
     ]);
 
-    if (sellerResult.error) {
-      logger.error("[Reply API Error] Failed to fetch seller row:", { error: sellerResult.error });
-      return NextResponse.json(
-        { error: "Supabase tables are not ready. Run the supplied migration first." },
-        { status: 503 },
-      );
-    }
+    let sellerData = sellerResult.data as any;
 
-    const sellerData = sellerResult.data as any;
+    if (!sellerData) {
+      const { data: upsertedSeller } = await supabase
+        .from("sellers")
+        .upsert({ id: user.id, email: user.email || null }, { onConflict: "id" })
+        .select("id,business_name,industry,website")
+        .maybeSingle();
+
+      sellerData = upsertedSeller || {
+        id: user.id,
+        business_name: "Store",
+        industry: null,
+        website: null,
+      };
+    }
     const remoteConfig = configResult.data as AgentConfigRow | null;
 
     const obItem = Array.isArray(remoteConfig?.knowledge_items)

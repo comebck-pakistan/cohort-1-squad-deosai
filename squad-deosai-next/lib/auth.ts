@@ -117,7 +117,7 @@ export function useAuth(): AuthState {
         .from("sellers")
         .select("*")
         .eq("id", authUser.id)
-        .single();
+        .maybeSingle();
 
       setUser(toAuthUser(authUser, seller));
       setLoading(false);
@@ -134,7 +134,7 @@ export function useAuth(): AuthState {
           .from("sellers")
           .select("*")
           .eq("id", session.user.id)
-          .single();
+          .maybeSingle();
 
         setUser(toAuthUser(session.user, seller));
       } else {

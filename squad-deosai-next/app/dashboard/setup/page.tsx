@@ -137,7 +137,7 @@ export default function SetupPage() {
 
       try {
         const [sellerRes, configRes, productsRes] = await Promise.all([
-          supabase.from("sellers").select("*").eq("id", user.id).single(),
+          supabase.from("sellers").select("*").eq("id", user.id).maybeSingle(),
           supabase.from("agent_configs").select("*").eq("seller_id", user.id).maybeSingle(),
           supabase.from("products").select("*").eq("seller_id", user.id),
         ]);

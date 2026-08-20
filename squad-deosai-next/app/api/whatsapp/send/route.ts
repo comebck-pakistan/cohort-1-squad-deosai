@@ -3,6 +3,7 @@ import { getWhatsAppStatus } from '@/lib/whatsapp/client';
 import { insertMessage, updateConversationStatus } from '@/lib/supabase-service';
 import { logger } from '@/lib/logger';
 import { whatsappSendSchema } from '@/lib/validations/api';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
@@ -33,17 +34,28 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Format phone number to WhatsApp format
-    let formattedPhone = customerPhone.replace(/\s+/g, ''); // Remove spaces
+    // 2. Fetch conversation external_id from Supabase for exact destination JID (@lid or @c.us)
+    const supabase = await createClient();
+    const { data: conv } = await supabase
+      .from('conversations')
+      .select('external_id')
+      .eq('id', conversationId)
+      .maybeSingle();
 
-    if (!formattedPhone.includes('@')) {
-      // If it doesn't include @, it's a raw number. Strip non-digits and append @c.us
-      formattedPhone = formattedPhone.replace(/[^0-9]/g, '') + '@c.us';
+    let targetJid = conv?.external_id;
+
+    if (!targetJid) {
+      let formattedPhone = customerPhone.replace(/\s+/g, '');
+      if (!formattedPhone.includes('@')) {
+        formattedPhone = formattedPhone.replace(/[^0-9]/g, '') + '@c.us';
+      }
+      targetJid = formattedPhone;
     }
-    // If it already contains @ (e.g., @c.us or @lid), we leave it as is.
+
+    logger.info(`[API WhatsApp Send] Sending message to ${targetJid} for seller ${sellerId}`);
 
     // 3. Send message via WhatsApp Web JS
-    await client.sendMessage(formattedPhone, message);
+    await client.sendMessage(targetJid, message);
 
     // 4. Save to Supabase
     await insertMessage(sellerId, conversationId, message, 'seller', true);
