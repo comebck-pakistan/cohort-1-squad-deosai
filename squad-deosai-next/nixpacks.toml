@@ -1,0 +1,6 @@
+# Nixpacks configuration for Railway deployment with Puppeteer & Chromium
+[phases.setup]
+nixPkgs = ["chromium", "nss", "freetype", "harfbuzz", "ca-certificates"]
+
+[variables]
+PUPPETEER_SKIP_CHROMIUM_DOWNLOAD = "false"
