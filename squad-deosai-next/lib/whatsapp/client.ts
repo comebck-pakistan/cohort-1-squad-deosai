@@ -24,6 +24,28 @@ export interface WhatsAppClientState {
 // For production, a dedicated worker process is recommended.
 export const whatsappClients = new Map<string, WhatsAppClientState>();
 
+function getPuppeteerExecutablePath(): string | undefined {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    return process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+  if (process.platform === 'win32') {
+    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  }
+  const knownLinuxPaths = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+  ];
+  for (const p of knownLinuxPaths) {
+    if (fs.existsSync(p)) {
+      logger.info(`[WhatsApp] Found Linux Chromium binary at: ${p}`);
+      return p;
+    }
+  }
+  return undefined;
+}
+
 async function cleanupWhatsAppSession(sellerId: string) {
   // Delete session folder
   const sessionPath = path.join(process.cwd(), '.wwebjs_auth', `session-${sellerId}`);
@@ -36,12 +58,16 @@ async function cleanupWhatsAppSession(sellerId: string) {
     }
   }
 
-  // Kill stray headless chrome processes on Windows
-  try {
-    await execPromise('wmic process where "name=\'chrome.exe\' and commandline like \'%headless%\'" call terminate');
-    logger.info(`[WhatsApp] Cleaned up stray headless Chrome processes.`);
-  } catch (err) {
-    // Ignore errors if no processes found
+  // Kill stray headless chrome processes
+  if (process.platform === 'win32') {
+    try {
+      await execPromise('wmic process where "name=\'chrome.exe\' and commandline like \'%headless%\'" call terminate');
+      logger.info(`[WhatsApp] Cleaned up stray headless Chrome processes on Windows.`);
+    } catch (err) {}
+  } else {
+    try {
+      await execPromise('pkill -f chrome || true');
+    } catch (err) {}
   }
 }
 
@@ -61,8 +87,17 @@ export async function initializeWhatsAppClient(sellerId: string): Promise<WhatsA
   const client = new Client({
     authStrategy: new LocalAuth({ clientId: sellerId }),
     puppeteer: {
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' : undefined),
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      executablePath: getPuppeteerExecutablePath(),
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu',
+      ],
     },
   });
 
