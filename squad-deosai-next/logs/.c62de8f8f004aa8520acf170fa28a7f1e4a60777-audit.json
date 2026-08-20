@@ -14,6 +14,11 @@
             "date": 1786873375885,
             "name": "logs\\api-combined-2026-08-16.log",
             "hash": "e1267c4be3bb28e7cd14e0576ce59d7760695f109cfbbb9c989d0612cca7e76e"
+        },
+        {
+            "date": 1787238228352,
+            "name": "logs\\api-combined-2026-08-20.log",
+            "hash": "bcd5b1cc54fb490b25a2e38923465d22f8d01f049e228e468affa9e73a42cdcf"
         }
     ],
     "hashType": "sha256"
