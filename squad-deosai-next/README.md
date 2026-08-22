@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🤖 Jawab AI — WhatsApp Auto-DM Platform
 
-## Getting Started
+This is the main Next.js application for Jawab AI — an AI-powered WhatsApp agent for Pakistani social sellers.
 
-First, run the development server:
+---
+
+## 🚀 Quick Start (For Developers)
+
+### 1. Install dependencies
+
+```bash
+npm install
+```
+
+### 2. Set up environment variables
+
+Create `.env.local` in the root of this folder:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SECRET_KEY=your_service_role_key
+OPENAI_API_KEY=your_openai_key
+```
+
+### 3. Run development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🧪 How Sellers Use Jawab AI
 
-## Learn More
+### Step 1: Sign Up
 
-To learn more about Next.js, take a look at the following resources:
+Create an account with email + password.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Step 2: Onboarding
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Complete the 7-step onboarding flow:
 
-## Deploy on Vercel
+1. **Business Profile** — Store name, category, WhatsApp number
+2. **Import Catalogue** — Upload CSV/Excel with products
+3. **Store Policies** — Delivery charges, delivery time, return policy
+4. **AI Personality** — Agent name, tone, language
+5. **Connect WhatsApp (optional)** — Scan QR to link your number or go to dashboard
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Step 3: Dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **AI Studio:** Test your AI agent with real messages
+- **Setup:** Manage catalogue, policies, and business rules
+- **Inbox:** View all customer conversations and reply manually
+- **Orders:** Track COD order confirmations
+
+### Step 4: WhatsApp Auto-Reply
+
+Once connected, Jawab AI automatically replies to customer messages 24/7 using your catalogue and business rules.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (React + TypeScript) |
+| Styling | Tailwind CSS + shadcn/ui |
+| Database | Supabase (PostgreSQL + Auth) |
+| AI | OpenAI (GPT-4o-mini) |
+| WhatsApp | WhatsApp Cloud API + `whatsapp-web.js` |
+
+---
+
+## 📁 Folder Structure
+
+```text
+squad-deosai-next/
+├── app/
+│   ├── api/           → API routes (AI, WhatsApp, Auth)
+│   ├── auth/          → Login / Signup pages
+│   ├── dashboard/     → Dashboard pages (Inbox, Orders, Setup)
+│   └── onboarding/    → Onboarding flow (7 steps)
+├── lib/
+│   ├── ai/            → AI logic, grounding, token caching
+│   ├── supabase/      → Supabase client (admin + browser)
+│   └── whatsapp/      → WhatsApp integration (QR, auto-reply)
+├── components/        → Reusable UI components
+├── public/            → Static assets
+└── supabase/          → Database migrations
+```
+
+---
+
+## 🔧 Available Scripts
+
+| Command | Description |
+|---|---|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run start:worker` | Run WhatsApp worker (standalone) |
+| `npm run lint` | Run ESLint |
+
+---
+
+## 🧪 Features
+
+- ✅ WhatsApp auto-reply (AI-powered)
+- ✅ CSV/Excel catalogue upload
+- ✅ Seller dashboard with inbox and orders
+- ✅ Business rules (stock, policies, pricing)
+- ✅ QR code login — no technical knowledge required
+- ✅ AI reply logging for review
